@@ -27,8 +27,9 @@ jobs:
     - name: Deploy to server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          git pull origin main
+          sudo su
           cd ~/roomey-api
+          git pull origin main
           npm install
           npm run build
           nohup npm start
