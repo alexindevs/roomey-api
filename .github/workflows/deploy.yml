@@ -28,9 +28,10 @@ jobs:
     - name: Copy deployment script
       run: |
         mkdir -p ~/.ssh
+        pwd
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ../scripts/deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/deploy.sh
+        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ../../scripts/deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/deploy.sh
 
     - name: Deploy to server
       env:
