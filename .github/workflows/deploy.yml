@@ -17,7 +17,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '20'
 
     - name: Install dependencies
       run: npm install
@@ -28,12 +28,9 @@ jobs:
     - name: Copy deployment script
       run: |
         mkdir -p ~/.ssh
-        pwd
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        pwd
-        ls -la
-        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ../deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/deploy.sh
+        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./.github/scripts/deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/deploy.sh
 
     - name: Deploy to server
       env:
