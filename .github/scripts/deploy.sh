@@ -31,9 +31,23 @@ fi
 
 ls -al
 
-git remote set-url origin https://github.com/alexindevs/roomey-api.git
+REPO_URL="https://github.com/alexindevs/roomey-api.git"
 
-git remote -v
+# Check if remote origin exists
+if ! git ls-remote --exit-code origin &> /dev/null; then
+    echo "Remote 'origin' does not exist. Adding it now..."
+    git remote add origin "$REPO_URL"
+else
+    echo "Remote 'origin' already exists."
+    # Verify if the URL matches
+    CURRENT_URL=$(git config --get remote.origin.url)
+    if [ "$CURRENT_URL" != "$REPO_URL" ]; then
+        echo "Updating remote 'origin' URL to $REPO_URL"
+        git remote set-url origin "$REPO_URL"
+    else
+        echo "Remote 'origin' URL is already set correctly."
+    fi
+fi
 
 # Pull the latest changes from the main branch
 git pull origin main
