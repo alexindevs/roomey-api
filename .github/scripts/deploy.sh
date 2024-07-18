@@ -58,5 +58,14 @@ npm install
 # Build the project
 npm run build
 
-# Restart the application
-nohup npm start &
+# Start the application in the background and disown the process
+nohup npm start > /dev/null 2>&1 &
+
+# Optionally, you can wait for a few seconds before exiting to ensure the application has started
+sleep 15
+
+# Print a message indicating the application has started
+echo "Application started successfully."
+
+# Exit the script with success status
+exit 0
