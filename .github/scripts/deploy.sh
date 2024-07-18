@@ -29,7 +29,11 @@ if [ ! -d ".git" ]; then
   git init
 fi
 
+ls -al
+
 git remote set-url origin https://github.com/alexindevs/roomey-api.git
+
+git remote -v
 
 # Pull the latest changes from the main branch
 git pull origin main
