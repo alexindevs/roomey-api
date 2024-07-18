@@ -15,6 +15,8 @@ then
     nvm use 20
 fi
 
+pwd
+
 git remote set-url origin https://github.com/alexindevs/roomey-api.git
 
 # Pull the latest changes from the main branch
