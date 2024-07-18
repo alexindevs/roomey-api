@@ -24,7 +24,10 @@ fi
 
 pwd
 
-git init
+if [ ! -d ".git" ]; then
+  echo "Initializing a new git repository..."
+  git init
+fi
 
 git remote set-url origin https://github.com/alexindevs/roomey-api.git
 
