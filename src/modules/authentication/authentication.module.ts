@@ -15,7 +15,12 @@ import { RefreshTokenService } from './tokens/refreshtoken.service';
     ]),
     OtpModule,
   ],
-  providers: [AuthenticationService, AccessTokenService, RefreshTokenService, EmailService],
+  providers: [
+    AuthenticationService,
+    AccessTokenService,
+    RefreshTokenService,
+    EmailService,
+  ],
   controllers: [AuthenticationController],
 })
 export class AuthenticationModule {}
