@@ -2,11 +2,10 @@ name: Deploy Roomey Project
 on:
   push:
     branches:
-      - main
+      - dev
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
