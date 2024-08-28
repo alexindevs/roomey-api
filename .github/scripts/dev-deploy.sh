@@ -50,7 +50,7 @@ else
 fi
 
 # Pull the latest changes from the main branch
-git pull origin main
+git pull origin dev
 
 # Install dependencies
 npm install
