@@ -2,11 +2,12 @@ import {
   Controller,
   Post,
   Body,
-  Headers,
   UsePipes,
   ValidationPipe,
   HttpCode,
   Res,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import {
@@ -19,7 +20,7 @@ import {
 } from './authentication.dto';
 import { Response } from 'express';
 import { statusCodes } from 'src/shared/constants';
-import { Types } from 'mongoose';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -28,17 +29,18 @@ export class AuthenticationController {
   @Post('register')
   @UsePipes(new ValidationPipe())
   async registerUser(@Body() newUserDto: NewUserDto, @Res() res: Response) {
-    const { name, email, date_of_birth, password } = newUserDto;
+    const { name, email, date_of_birth, password, phone_number } = newUserDto;
     const response = await this.authService.register(
       name,
       email,
       date_of_birth,
       password,
+      phone_number,
     );
     if ('error' in response) {
       return res
         .status(response.code)
-        .json({ message: response.error, data: null });
+        .json({ message: response.error, code: response.code, data: null });
     } else {
       return res
         .status(response.code)
@@ -77,6 +79,7 @@ export class AuthenticationController {
     if (!response) {
       return res.status(statusCodes.UNAUTHORIZED).json({
         message: 'Invalid credentials',
+        code: statusCodes.UNAUTHORIZED,
         data: null,
       });
     }
@@ -86,15 +89,16 @@ export class AuthenticationController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(statusCodes.OK)
-  async logoutUser(@Headers('userId') userId: string, @Res() res: Response) {
-    if (!userId) {
+  async logoutUser(@Req() req: any, @Res() res: Response) {
+    if (!req.user.userId) {
       return res.status(statusCodes.BAD_REQUEST).json({
         message: 'No user ID provided',
         data: null,
       });
     }
-    const response = await this.authService.logout(new Types.ObjectId(userId));
+    const response = await this.authService.logout(req.user.userId);
     return res
       .status(response.code)
       .json({ message: response.message, data: response.data });
@@ -108,9 +112,11 @@ export class AuthenticationController {
   ) {
     const { email } = startPasswordResetDto;
     const response = await this.authService.startPasswordReset(email);
-    return res
-      .status(response.code)
-      .json({ message: response.message, data: response.data });
+    return res.status(response.code).json({
+      message: response.message,
+      code: response.code,
+      data: response.data,
+    });
   }
 
   @Post('end-password-reset')
@@ -124,11 +130,13 @@ export class AuthenticationController {
     if ('error' in response) {
       return res
         .status(response.code)
-        .json({ message: response.error, data: null });
+        .json({ message: response.error, code: response.code, data: null });
     } else {
-      return res
-        .status(response.code)
-        .json({ message: response.message, data: response.data });
+      return res.status(response.code).json({
+        message: response.message,
+        code: response.code,
+        data: response.data,
+      });
     }
   }
 }

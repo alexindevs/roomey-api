@@ -1,11 +1,23 @@
-import { IsString, IsNotEmpty, IsEnum, IsArray, IsNumber, IsOptional, IsDate } from 'class-validator';
-import { ApartmentType, RoomType, RentSchedule, Amenities, GenderPreference } from './room-listing.schema';  // Adjust the path as necessary
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsDate,
+  ArrayMinSize,
+  ArrayMaxSize,
+} from 'class-validator';
+import {
+  ApartmentType,
+  RoomType,
+  RentSchedule,
+  Amenities,
+  GenderPreference,
+} from './room-listing.schema'; // Adjust the path as necessary
 
 export class CreateRoomListingDto {
-  @IsString()
-  @IsNotEmpty()
-  user_id: string;
-
   @IsEnum(ApartmentType)
   @IsNotEmpty()
   apartment_type: ApartmentType;
@@ -14,10 +26,17 @@ export class CreateRoomListingDto {
   @IsNotEmpty()
   room_type: RoomType;
 
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(8)
+  images: string[];
+
   @IsNotEmpty()
   location: {
-    id: string;
-    coordinates: [number, number];
+    geodata: {
+      type: string;
+      coordinates: number[];
+    };
     country: string;
     street_name: string;
     street_number: number;
@@ -50,9 +69,9 @@ export class CreateRoomListingDto {
   @IsNotEmpty()
   rent_amount: number;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  deadline: Date;
+  deadline: string;
 
   @IsNotEmpty()
   roommate_spec: {
@@ -63,10 +82,6 @@ export class CreateRoomListingDto {
 
 export class UpdateRoomListingDto {
   @IsOptional()
-  @IsString()
-  user_id?: string;
-
-  @IsOptional()
   @IsEnum(ApartmentType)
   apartment_type?: ApartmentType;
 
@@ -76,7 +91,6 @@ export class UpdateRoomListingDto {
 
   @IsOptional()
   location?: {
-    id?: string;
     coordinates?: [number, number];
     country?: string;
     street_name?: string;
@@ -170,8 +184,8 @@ export class SearchByFiltersDto {
   keywords?: string;
 }
 
-export class FindByUserIdDto {
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-}
+// export class FindByUserIdDto {
+//   @IsString()
+//   @IsNotEmpty()
+//   userId: string;
+// }

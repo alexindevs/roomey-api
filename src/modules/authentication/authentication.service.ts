@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './authentication.schema';
 import { Model, Types } from 'mongoose';
 import { ErrorResponse, SuccessResponse } from 'src/shared/responses';
@@ -23,8 +23,9 @@ export class AuthenticationService {
   async register(
     name: string,
     email: string,
-    date_of_birth: Date,
+    date_of_birth: string,
     password: string,
+    phone_number: string,
   ): Promise<SuccessResponse | ErrorResponse> {
     const userExists = await this.userModel.findOne({ email });
     if (userExists) {
@@ -39,7 +40,17 @@ export class AuthenticationService {
       email,
       date_of_birth,
       password: hashedPassword,
+      role: 'User',
+      phone_number: phone_number,
     });
+    const OTP = await this.otp.generate('20m', user._id, 'Email Verification');
+
+    const subject = 'Verification Code';
+    const body =
+      'Your verification code is: ' +
+      OTP.token +
+      '. It will expire in 20 minutes.';
+    await this.email.sendEmail(user.email, subject, body);
     await this.RTS.addNewToken(user._id);
     const accessToken = this.ATS.generateAccessToken(user);
     return {
@@ -168,7 +179,8 @@ export class AuthenticationService {
     } else {
       return {
         code: statusCodes.NOT_FOUND,
-        error: 'Account with associated information not found.',
+        message: 'Account with associated information not found.',
+        data: null,
       };
     }
   }

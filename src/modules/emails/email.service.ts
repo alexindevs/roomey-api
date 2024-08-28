@@ -18,7 +18,7 @@ export class EmailService {
 
   async sendEmail(to: string, subject: string, body: string): Promise<void> {
     await this.transporter.sendMail({
-      from: 'Panic Alerts <panicbutton.xp@gmail.com>',
+      from: 'Alexin <alexindevs@gmail.com>',
       to,
       subject,
       text: body,

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RefreshToken } from '../authentication.schema';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { statusCodes } from 'src/shared/constants';
 
 @Injectable()

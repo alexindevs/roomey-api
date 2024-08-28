@@ -1,25 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-enum ApartmentType {
+export enum ApartmentType {
   Apartment = 'Apartment',
   House = 'House',
   Cabin = 'Cabin',
 }
 
-enum RoomType {
+export enum RoomType {
   Shared_Room = 'Shared_Room',
   Single_Room = 'Single_Room',
   Apartment = 'Apartment',
 }
 
-enum RentSchedule {
+export enum RentSchedule {
   Month = 'Month',
   Year = 'Year',
   Week = 'Week',
 }
 
-enum Amenities {
+export enum Amenities {
   Wifi = 'Wifi',
   Pool = 'Pool',
   Hot_Tub = 'Hot_Tub',
@@ -46,7 +46,7 @@ enum Amenities {
   Breakfast = 'Breakfast',
 }
 
-enum GenderPreference {
+export enum GenderPreference {
   Male = 'Male',
   Female = 'Female',
   Other = 'Other',
@@ -68,11 +68,22 @@ class RoomInfo {
 }
 
 class Location {
-  @Prop({ required: true, type: String })
-  id: string;
-
-  @Prop({ required: true, type: [Number] })
-  coordinates: number[];
+  @Prop({
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+    },
+    // format: lng, lat
+    coordinates: {
+      type: [Number],
+      default: [0, 0],
+    },
+  })
+  geodata: {
+    type: string;
+    coordinates: number[];
+  };
 
   @Prop({ required: true, type: String })
   country: string;
@@ -105,10 +116,7 @@ export type RoomListingDocument = RoomListing & Document;
 
 @Schema()
 export class RoomListing {
-  @Prop({ required: true, type: String })
-  id: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'User' })
+  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   user_id: string;
 
   @Prop({ required: true, enum: ApartmentType, type: String })
@@ -132,6 +140,12 @@ export class RoomListing {
   @Prop({ required: true, enum: RentSchedule, type: String })
   rent_schedule: RentSchedule;
 
+  @Prop({ required: true, default: true, type: Boolean })
+  is_active: boolean;
+
+  @Prop({ required: true, type: Array, minlength: 1, maxlength: 8 })
+  images: string[];
+
   @Prop({ required: true, type: Number })
   rent_amount: number;
 
@@ -140,6 +154,25 @@ export class RoomListing {
 
   @Prop({ required: true, type: RoommateSpec })
   roommate_spec: RoommateSpec;
+
+  @Prop({ required: true, type: Date, default: Date.now })
+  created_at: Date;
+
+  @Prop({ required: true, type: Date, default: Date.now })
+  updated_at: Date;
 }
 
 export const RoomListingSchema = SchemaFactory.createForClass(RoomListing);
+
+export type SavedRoomsDocument = SavedRooms & Document;
+
+@Schema()
+export class SavedRooms {
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  user_id: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'RoomListing' })
+  room_id: string;
+}
+
+export const SavedRoomsSchema = SchemaFactory.createForClass(SavedRooms);
