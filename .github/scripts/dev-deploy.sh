@@ -50,6 +50,8 @@ else
 fi
 
 # Pull the latest changes from the main branch
+
+git switch dev
 git pull origin dev
 
 # Install dependencies
