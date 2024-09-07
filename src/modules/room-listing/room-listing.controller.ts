@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Delete,
   Body,
   Query,
@@ -12,6 +11,7 @@ import {
   ValidationPipe,
   UseGuards,
   Req,
+  Patch,
 } from '@nestjs/common';
 import { RoomListingService } from './room-listing.service';
 import {
@@ -72,7 +72,7 @@ export class RoomListingController {
     });
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UsePipes(new ValidationPipe())
   @UseGuards(JwtAuthGuard)
   async updateRoomListing(
@@ -123,9 +123,9 @@ export class RoomListingController {
   ) {
     const { lat, lng, radius } = query;
     const response = await this.roomListingService.searchByGeolocation(
-      lat,
-      lng,
-      radius ? radius : 100,
+      Number(lat),
+      Number(lng),
+      radius ? Number(radius) : 100,
     );
     return res.status(statusCodes.OK).json({
       message: 'Search results',
@@ -135,26 +135,35 @@ export class RoomListingController {
   }
 
   @Get('search/filters')
-  @UsePipes(new ValidationPipe())
-  async searchByFilters(
-    @Query() query: SearchByFiltersDto,
-    @Res() res: Response,
-  ) {
-    const { priceRange, bedrooms, bathrooms, amenities, moveInDate, keywords } =
-      query;
-    const response = await this.roomListingService.searchByFilters(
-      priceRange,
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async searchByFilters(@Query() query: SearchByFiltersDto) {
+    const {
+      minPrice,
+      maxPrice,
+      rentSchedule,
       bedrooms,
       bathrooms,
+      roomType,
       amenities,
-      moveInDate,
-      keywords,
+      page,
+      limit,
+    } = query;
+
+    const priceRange = {
+      min: minPrice ? parseFloat(minPrice) : 0,
+      max: maxPrice ? parseFloat(maxPrice) : Number.MAX_SAFE_INTEGER,
+    };
+
+    return this.roomListingService.searchByFilters(
+      priceRange,
+      rentSchedule,
+      bedrooms ? parseInt(bedrooms, 10) : undefined,
+      bathrooms ? parseInt(bathrooms, 10) : undefined,
+      roomType,
+      amenities,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 10,
     );
-    return res.status(statusCodes.OK).json({
-      message: 'Filtered search results',
-      code: statusCodes.OK,
-      data: response,
-    });
   }
 
   @Get('user/:userId')

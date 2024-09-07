@@ -3,7 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SuccessResponse } from 'src/shared/responses';
 import { statusCodes } from 'src/shared/constants';
-import { RoomListing, RoomListingDocument } from './room-listing.schema';
+import {
+  ApartmentType,
+  GenderPreference,
+  RentSchedule,
+  RoomListing,
+  RoomListingDocument,
+  RoomType,
+} from './room-listing.schema';
 import { CreateRoomListingDto } from './room-listing.dto';
 
 @Injectable()
@@ -14,7 +21,7 @@ export class RoomListingService {
   ) {}
 
   async searchByText(searchText: string): Promise<RoomListing[]> {
-    const regex = new RegExp(searchText, 'i');
+    const regex = new RegExp(searchText.replace(/\s+/g, '_'), 'i'); // Replace spaces with underscores
     return this.roomListingModel
       .find({
         $or: [
@@ -22,6 +29,10 @@ export class RoomListingService {
           { 'location.city': regex },
           { 'location.street_name': regex },
           { 'location.postal_code': regex },
+          { apartment_type: regex }, // Search by apartment type
+          { room_type: regex }, // Search by room type
+          { amenities: { $in: [regex] } }, // Search by amenities
+          { description: { $regex: regex } }, // Search within description
         ],
       })
       .exec();
@@ -63,6 +74,65 @@ export class RoomListingService {
       message: 'Room listings retrieved successfully',
       data: roomListings,
     };
+  }
+
+  async searchByFilters(
+    priceRange: { min: number; max: number },
+    rentSchedule?: RentSchedule,
+    bedrooms?: number,
+    bathrooms?: number,
+    roomType?: RoomType,
+    amenities?: string[],
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const filters: any = {
+      rent_amount: { $gte: priceRange.min, $lte: priceRange.max },
+      isActive: true,
+    };
+
+    if (rentSchedule) filters.rent_schedule = rentSchedule;
+    if (bedrooms !== undefined) filters['information.num_bedrooms'] = bedrooms;
+    if (bathrooms !== undefined)
+      filters['information.num_bathrooms'] = bathrooms;
+    if (roomType) filters.room_type = roomType;
+    if (amenities && amenities.length > 0)
+      filters.amenities = { $all: amenities };
+
+    const skip = (page - 1) * limit;
+
+    try {
+      const [listings, total] = await Promise.all([
+        this.roomListingModel
+          .find(filters)
+          .sort({ rent_amount: 'asc' })
+          .skip(skip)
+          .limit(limit)
+          .exec(),
+        this.roomListingModel.countDocuments(filters),
+      ]);
+
+      if (listings.length === 0) {
+        return {
+          code: statusCodes.NOT_FOUND,
+          message: 'No room listings found',
+          data: { listings: [], total: 0 },
+        };
+      }
+
+      return {
+        code: statusCodes.OK,
+        message: 'Room listings retrieved successfully',
+        data: { listings, total },
+      };
+    } catch (error) {
+      console.error('Error in searchByFilters:', error);
+      return {
+        code: statusCodes.INTERNAL_SERVER_ERROR,
+        message: 'An error occurred while searching for room listings',
+        data: { listings: [], total: 0 },
+      };
+    }
   }
 
   async createRoomListing(
@@ -155,7 +225,7 @@ export class RoomListingService {
     if (!updatedRoomListing) {
       return {
         code: statusCodes.NOT_FOUND,
-        message: `Room listing with ID ${id} not found`,
+        message: `Room listing with ID ${id} permitted for update not found. Please confirm that this room listing exists and you are the owner.`,
         data: null,
       };
     }
@@ -166,6 +236,15 @@ export class RoomListingService {
       data: updatedRoomListing,
     };
   }
+
+  /**
+   * Deletes a room listing by id. If the room listing is not found,
+   * a 404 error is returned.
+   *
+   * @param id - The id of the room listing to delete
+   * @returns A SuccessResponse with a code of 200 if the room listing is deleted
+   * successfully, or a 404 error if the room listing is not found.
+   */
   async deleteRoomListing(id: string): Promise<SuccessResponse> {
     const result = await this.roomListingModel.findByIdAndDelete(id).exec();
     if (!result) {
@@ -191,28 +270,5 @@ export class RoomListingService {
       code: statusCodes.OK,
       data: roomListings,
     };
-  }
-
-  async searchByFilters(
-    priceRange: { min: number; max: number },
-    bedrooms: number,
-    bathrooms: number,
-    amenities: string[],
-    moveInDate: Date,
-    keywords?: string,
-  ): Promise<RoomListing[]> {
-    const filters: any = {
-      rent_amount: { $gte: priceRange.min, $lte: priceRange.max },
-      'information.num_bedrooms': bedrooms,
-      'information.num_bathrooms': bathrooms,
-      amenities: { $all: amenities },
-      deadline: { $gte: moveInDate },
-    };
-
-    if (keywords) {
-      filters.$text = { $search: keywords };
-    }
-
-    return this.roomListingModel.find(filters).exec();
   }
 }

@@ -5,9 +5,11 @@ import {
   IsArray,
   IsNumber,
   IsOptional,
-  IsDate,
   ArrayMinSize,
   ArrayMaxSize,
+  IsIn,
+  IsDateString,
+  IsNumberString,
 } from 'class-validator';
 import {
   ApartmentType,
@@ -16,6 +18,7 @@ import {
   Amenities,
   GenderPreference,
 } from './room-listing.schema'; // Adjust the path as necessary
+import { Transform, Type } from 'class-transformer';
 
 export class CreateRoomListingDto {
   @IsEnum(ApartmentType)
@@ -124,9 +127,9 @@ export class UpdateRoomListingDto {
   @IsNumber()
   rent_amount?: number;
 
-  @IsOptional()
-  @IsDate()
-  deadline?: Date;
+  @IsString()
+  @IsNotEmpty()
+  deadline: string;
 
   @IsOptional()
   roommate_spec?: {
@@ -142,46 +145,60 @@ export class SearchByTextDto {
 }
 
 export class SearchByGeolocationDto {
-  @IsNumber()
   @IsNotEmpty()
   lat: number;
 
-  @IsNumber()
   @IsNotEmpty()
   lng: number;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   radius: number;
 }
 
 export class SearchByFiltersDto {
-  @IsNotEmpty()
-  priceRange: {
-    min: number;
-    max: number;
-  };
+  @IsNumberString()
+  @IsOptional()
+  minPrice?: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  bedrooms: number;
+  @IsNumberString()
+  @IsOptional()
+  maxPrice?: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  bathrooms: number;
+  @IsEnum(RentSchedule)
+  @IsOptional()
+  rentSchedule?: RentSchedule;
+
+  @IsNumberString()
+  @IsOptional()
+  bedrooms?: string;
+
+  @IsNumberString()
+  @IsOptional()
+  bathrooms?: string;
+
+  @IsEnum(RoomType)
+  @IsOptional()
+  roomType?: RoomType;
 
   @IsArray()
   @IsEnum(Amenities, { each: true })
-  @IsNotEmpty()
-  amenities: Amenities[];
-
-  @IsDate()
-  @IsNotEmpty()
-  moveInDate: Date;
-
   @IsOptional()
-  @IsString()
-  keywords?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
+  amenities?: Amenities[];
+
+  @IsDateString()
+  @IsOptional()
+  moveInDate?: string;
+
+  @IsNumberString()
+  @IsOptional()
+  page?: string;
+
+  @IsNumberString()
+  @IsOptional()
+  limit?: string;
 }
 
 // export class FindByUserIdDto {
