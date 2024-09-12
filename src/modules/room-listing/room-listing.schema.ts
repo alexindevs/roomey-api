@@ -67,7 +67,7 @@ class RoomInfo {
   description: string;
 }
 
-class Location {
+export class Location {
   @Prop({
     type: {
       type: String,
