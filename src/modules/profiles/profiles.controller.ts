@@ -53,7 +53,10 @@ export class ProfilesController {
     @Request() req,
   ) {
     // Set the user_id from the authenticated user in the request
-    return this.profilesService.createUserProfile({ ...createUserProfileDto, user_id: req.user.userId });
+    return this.profilesService.createUserProfile({
+      ...createUserProfileDto,
+      user_id: req.user.userId,
+    });
   }
 
   /**

@@ -29,14 +29,26 @@ export class AuthenticationController {
   @Post('register')
   @UsePipes(new ValidationPipe())
   async registerUser(@Body() newUserDto: NewUserDto, @Res() res: Response) {
-    const { name, email, date_of_birth, password, phone_number } = newUserDto;
-    const response = await this.authService.register(
-      name,
+    const {
+      first_name,
+      last_name,
       email,
       date_of_birth,
       password,
       phone_number,
+      gender,
+    } = newUserDto;
+
+    const response = await this.authService.register(
+      first_name,
+      last_name,
+      email,
+      date_of_birth,
+      password,
+      phone_number,
+      gender, // Pass the gender field as well
     );
+
     if ('error' in response) {
       return res
         .status(response.code)

@@ -3,18 +3,18 @@ import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
-enum Roles {
+export enum Roles {
   USER = 'User',
   ADMIN = 'Admin',
 }
 
-enum Gender {
+export enum Gender {
   Male = 'Male',
   Female = 'Female',
   Other = 'Other',
 }
 
-enum NotificationFrequency {
+export enum NotificationFrequency {
   Realtime = 'Realtime',
   Daily = 'Daily',
   None = 'None',

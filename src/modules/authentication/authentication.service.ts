@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from './authentication.schema';
+import { Gender, User, UserDocument } from './authentication.schema';
 import { Model, Types } from 'mongoose';
 import { ErrorResponse, SuccessResponse } from 'src/shared/responses';
 import { statusCodes } from 'src/shared/constants';
@@ -21,12 +21,15 @@ export class AuthenticationService {
   ) {}
 
   async register(
-    name: string,
+    first_name: string,
+    last_name: string,
     email: string,
     date_of_birth: string,
     password: string,
     phone_number: string,
+    gender: Gender, // Add gender as an argument
   ): Promise<SuccessResponse | ErrorResponse> {
+    // Check if the user already exists
     const userExists = await this.userModel.findOne({ email });
     if (userExists) {
       return {
@@ -34,25 +37,41 @@ export class AuthenticationService {
         code: statusCodes.CONFLICT,
       };
     }
+
+    // Hash the user's password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user document in the database
     const user = await this.userModel.create({
-      name,
+      first_name,
+      last_name,
       email,
       date_of_birth,
       password: hashedPassword,
       role: 'User',
-      phone_number: phone_number,
+      phone_number,
+      gender, // Add gender field to user creation
     });
+
+    // Generate OTP for email verification
     const OTP = await this.otp.generate('20m', user._id, 'Email Verification');
 
+    // Send verification email
     const subject = 'Verification Code';
     const body =
       'Your verification code is: ' +
       OTP.token +
       '. It will expire in 20 minutes.';
     await this.email.sendEmail(user.email, subject, body);
+
+    // Add new token to the Refresh Token Service (RTS)
+    console.log(user, user._id);
     await this.RTS.addNewToken(user._id);
+
+    // Generate access token for the new user
     const accessToken = this.ATS.generateAccessToken(user);
+
+    // Return the success response with user details and access token
     return {
       message: 'User created successfully',
       code: statusCodes.CREATED,

@@ -17,12 +17,13 @@ export class RefreshTokenService {
   }
 
   async addNewToken(userId: Types.ObjectId): Promise<boolean> {
-    const token = jwt.sign({ user_id: userId }, this.secret, {
+    console.log(userId);
+    const token = jwt.sign({ userId: userId }, this.secret, {
       expiresIn: '14d',
     });
     await this.refreshTokenModel.create({
       token,
-      user_id: userId,
+      userId,
     });
 
     return true;
@@ -33,7 +34,7 @@ export class RefreshTokenService {
     message: string;
   }> {
     const tokenDoc = await this.refreshTokenModel.findOne({
-      user_id: userId,
+      userId: userId,
     });
 
     try {
@@ -53,7 +54,7 @@ export class RefreshTokenService {
   async replaceToken(userId: Types.ObjectId) {
     try {
       const tokenDoc = await this.refreshTokenModel.findOne({
-        user_id: userId,
+        userId: userId,
       });
       if (!tokenDoc) {
         await this.addNewToken(userId);
@@ -63,11 +64,11 @@ export class RefreshTokenService {
           data: null,
         };
       }
-      const token = jwt.sign({ user_id: userId }, this.secret, {
+      const token = jwt.sign({ userId: userId }, this.secret, {
         expiresIn: '14d',
       });
       await this.refreshTokenModel.updateOne(
-        { user_id: userId },
+        { userId: userId },
         { token: token },
       );
       return {
@@ -85,7 +86,7 @@ export class RefreshTokenService {
 
   async invalidateToken(userId: Types.ObjectId) {
     const tokenDoc = await this.refreshTokenModel.findOne({
-      user_id: userId,
+      userId: userId,
     });
     if (!tokenDoc) {
       return {
@@ -94,7 +95,7 @@ export class RefreshTokenService {
         data: null,
       };
     }
-    await this.refreshTokenModel.findOneAndDelete({ user_id: userId });
+    await this.refreshTokenModel.findOneAndDelete({ userId: userId });
     return {
       code: statusCodes.OK,
       message: 'Logged out Successfully, please login again.',

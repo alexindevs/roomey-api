@@ -18,10 +18,10 @@ export class RoommateListingService {
     private userProfileModel: Model<UserProfileDocument>,
   ) {}
 
-  async create(
-    createRoommateListingDto: CreateRoommateListingDto,
-  ) {
-    const newListing = await this.roommateListingModel.create(createRoommateListingDto);
+  async create(createRoommateListingDto: CreateRoommateListingDto) {
+    const newListing = await this.roommateListingModel.create(
+      createRoommateListingDto,
+    );
     return {
       message: 'Roommate listing created successfully',
       data: newListing,
@@ -136,7 +136,9 @@ export class RoommateListingService {
   }
 
   async findAllByUserId(userId: string) {
-    const listings = await this.roommateListingModel.find({ user_id: userId }).exec();
+    const listings = await this.roommateListingModel
+      .find({ user_id: userId })
+      .exec();
     if (!listings) {
       throw new NotFoundException(`Roommate listings not found`);
     }
@@ -159,10 +161,7 @@ export class RoommateListingService {
     };
   }
 
-  async update(
-    id: string,
-    updateRoommateListingDto: UpdateRoommateListingDto,
-  ) {
+  async update(id: string, updateRoommateListingDto: UpdateRoommateListingDto) {
     const updatedListing = await this.roommateListingModel
       .findByIdAndUpdate(id, updateRoommateListingDto, {
         new: true,
