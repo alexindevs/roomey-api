@@ -6,10 +6,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RoomListingModule } from './modules/room-listing/room-listing.module';
 import { SavedListingsModule } from './modules/saved-listings/saved-listings.module';
 import { RoommateListingModule } from './modules/roommate-listing/roommate-listing.module';
-import { ProfilesService } from './modules/profiles/profiles.service';
-import { ProfilesController } from './modules/profiles/profiles.controller';
 import { ProfilesModule } from './modules/profiles/profiles.module';
-import { AccessTokenService } from './modules/authentication/tokens/accesstoken.service';
+import { DirectMessagingModule } from './modules/direct-messaging/direct-messaging.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -19,6 +18,8 @@ import { AccessTokenService } from './modules/authentication/tokens/accesstoken.
     SavedListingsModule,
     RoommateListingModule,
     ProfilesModule,
+    DirectMessagingModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

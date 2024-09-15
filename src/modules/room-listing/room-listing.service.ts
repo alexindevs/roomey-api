@@ -3,15 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SuccessResponse } from 'src/shared/responses';
 import { statusCodes } from 'src/shared/constants';
+import { RoomListing, RoomListingDocument } from './room-listing.schema';
 import {
-  ApartmentType,
-  GenderPreference,
-  RentSchedule,
-  RoomListing,
-  RoomListingDocument,
-  RoomType,
-} from './room-listing.schema';
-import { CreateRoomListingDto } from './room-listing.dto';
+  CreateRoomListingDto,
+  SearchRoomListingsDto,
+} from './room-listing.dto';
 
 @Injectable()
 export class RoomListingService {
@@ -20,77 +16,60 @@ export class RoomListingService {
     private roomListingModel: Model<RoomListingDocument>,
   ) {}
 
-  async searchByText(searchText: string): Promise<RoomListing[]> {
-    const regex = new RegExp(searchText.replace(/\s+/g, '_'), 'i'); // Replace spaces with underscores
-    return this.roomListingModel
-      .find({
-        $or: [
-          { 'location.country': regex },
-          { 'location.city': regex },
-          { 'location.street_name': regex },
-          { 'location.postal_code': regex },
-          { apartment_type: regex }, // Search by apartment type
-          { room_type: regex }, // Search by room type
-          { amenities: { $in: [regex] } }, // Search by amenities
-          { description: { $regex: regex } }, // Search within description
-        ],
-      })
-      .exec();
-  }
+  async searchRoomListings(params: SearchRoomListingsDto): Promise<any> {
+    const {
+      searchText,
+      lat,
+      lng,
+      radius,
+      minPrice,
+      maxPrice,
+      rentSchedule,
+      bedrooms,
+      bathrooms,
+      roomType,
+      amenities,
+      page = 1,
+      limit = 10,
+    } = params;
 
-  async searchByGeolocation(
-    lat: number,
-    lng: number,
-    radius: number,
-  ): Promise<{ code: number; message: string; data: RoomListing[] }> {
-    const filter = {
-      'location.geodata': {
+    const filters: any = {
+      is_active: true,
+    };
+
+    // Text search
+    if (searchText) {
+      const regex = new RegExp(searchText.replace(/\s+/g, '_'), 'i');
+      filters.$or = [
+        { 'location.country': regex },
+        { 'location.city': regex },
+        { 'location.street_name': regex },
+        { 'location.postal_code': regex },
+        { apartment_type: regex },
+        { room_type: regex },
+        { amenities: { $in: [regex] } },
+        { 'information.description': { $regex: regex } },
+        { 'roommate_spec.description': { $regex: regex } },
+      ];
+    }
+
+    // Geolocation search
+    if (lat !== undefined && lng !== undefined && radius !== undefined) {
+      filters['location.geodata'] = {
         $geoWithin: {
           $centerSphere: [[lng, lat], radius / 6378.1],
         },
-      },
-    };
-    const projection = {};
-    const options = {
-      lean: true,
-    };
-
-    const roomListings = await this.roomListingModel.find(
-      filter,
-      projection,
-      options,
-    );
-
-    if (!roomListings || roomListings.length === 0) {
-      return {
-        code: statusCodes.OK,
-        message: 'No room listings found',
-        data: [],
       };
     }
 
-    return {
-      code: statusCodes.OK,
-      message: 'Room listings retrieved successfully',
-      data: roomListings,
-    };
-  }
+    // Price range
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      filters.rent_amount = {};
+      if (minPrice !== undefined) filters.rent_amount.$gte = minPrice;
+      if (maxPrice !== undefined) filters.rent_amount.$lte = maxPrice;
+    }
 
-  async searchByFilters(
-    priceRange: { min: number; max: number },
-    rentSchedule?: RentSchedule,
-    bedrooms?: number,
-    bathrooms?: number,
-    roomType?: RoomType,
-    amenities?: string[],
-    page: number = 1,
-    limit: number = 10,
-  ) {
-    const filters: any = {
-      rent_amount: { $gte: priceRange.min, $lte: priceRange.max },
-      isActive: true,
-    };
-
+    // Other filters
     if (rentSchedule) filters.rent_schedule = rentSchedule;
     if (bedrooms !== undefined) filters['information.num_bedrooms'] = bedrooms;
     if (bathrooms !== undefined)
@@ -126,7 +105,7 @@ export class RoomListingService {
         data: { listings, total },
       };
     } catch (error) {
-      console.error('Error in searchByFilters:', error);
+      console.error('Error in searchRoomListings:', error);
       return {
         code: statusCodes.INTERNAL_SERVER_ERROR,
         message: 'An error occurred while searching for room listings',

@@ -17,12 +17,9 @@ import { RoomListingService } from './room-listing.service';
 import {
   CreateRoomListingDto,
   UpdateRoomListingDto,
-  SearchByTextDto,
-  SearchByGeolocationDto,
-  SearchByFiltersDto,
+  SearchRoomListingsDto,
 } from './room-listing.dto';
 import { Response } from 'express';
-import { statusCodes } from '../../shared/constants';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 @Controller('room-listings')
@@ -103,67 +100,18 @@ export class RoomListingController {
     });
   }
 
-  @Get('search/text')
-  @UsePipes(new ValidationPipe())
-  async searchByText(@Query() query: SearchByTextDto, @Res() res: Response) {
-    const { searchText } = query;
-    const response = await this.roomListingService.searchByText(searchText);
-    return res.status(statusCodes.OK).json({
-      message: 'Search results',
-      code: statusCodes.OK,
-      data: response,
-    });
-  }
-
-  @Get('search/geolocation')
-  @UsePipes(new ValidationPipe())
-  async searchByGeolocation(
-    @Query() query: SearchByGeolocationDto,
+  @Get('search')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async searchRoomListings(
+    @Query() query: SearchRoomListingsDto,
     @Res() res: Response,
   ) {
-    const { lat, lng, radius } = query;
-    const response = await this.roomListingService.searchByGeolocation(
-      Number(lat),
-      Number(lng),
-      radius ? Number(radius) : 100,
-    );
-    return res.status(statusCodes.OK).json({
-      message: 'Search results',
-      code: statusCodes.OK,
-      data: response,
+    const response = await this.roomListingService.searchRoomListings(query);
+    return res.status(response.code).json({
+      message: response.message,
+      code: response.code,
+      data: response.data,
     });
-  }
-
-  @Get('search/filters')
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async searchByFilters(@Query() query: SearchByFiltersDto) {
-    const {
-      minPrice,
-      maxPrice,
-      rentSchedule,
-      bedrooms,
-      bathrooms,
-      roomType,
-      amenities,
-      page,
-      limit,
-    } = query;
-
-    const priceRange = {
-      min: minPrice ? parseFloat(minPrice) : 0,
-      max: maxPrice ? parseFloat(maxPrice) : Number.MAX_SAFE_INTEGER,
-    };
-
-    return this.roomListingService.searchByFilters(
-      priceRange,
-      rentSchedule,
-      bedrooms ? parseInt(bedrooms, 10) : undefined,
-      bathrooms ? parseInt(bathrooms, 10) : undefined,
-      roomType,
-      amenities,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 10,
-    );
   }
 
   @Get('user/:userId')

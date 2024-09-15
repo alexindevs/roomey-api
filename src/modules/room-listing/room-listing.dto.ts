@@ -7,9 +7,12 @@ import {
   IsOptional,
   ArrayMinSize,
   ArrayMaxSize,
-  IsIn,
-  IsDateString,
-  IsNumberString,
+  ValidateIf,
+  Min,
+  IsLongitude,
+  IsInt,
+  ArrayNotEmpty,
+  IsLatitude,
 } from 'class-validator';
 import {
   ApartmentType,
@@ -18,7 +21,7 @@ import {
   Amenities,
   GenderPreference,
 } from './room-listing.schema'; // Adjust the path as necessary
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class CreateRoomListingDto {
   @IsEnum(ApartmentType)
@@ -138,67 +141,69 @@ export class UpdateRoomListingDto {
   };
 }
 
-export class SearchByTextDto {
+export class SearchRoomListingsDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  searchText: string;
-}
+  searchText?: string;
 
-export class SearchByGeolocationDto {
-  @IsNotEmpty()
-  lat: number;
+  @ValidateIf((o) => o.lng !== undefined || o.radius !== undefined)
+  @IsLatitude()
+  lat?: number;
 
-  @IsNotEmpty()
-  lng: number;
+  @ValidateIf((o) => o.lat !== undefined || o.radius !== undefined)
+  @IsLongitude()
+  lng?: number;
+
+  @ValidateIf((o) => o.lat !== undefined && o.lng !== undefined)
+  @IsNumber()
+  @Min(0)
+  radius?: number;
 
   @IsOptional()
-  radius: number;
-}
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  minPrice?: number;
 
-export class SearchByFiltersDto {
-  @IsNumberString()
   @IsOptional()
-  minPrice?: string;
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  maxPrice?: number;
 
-  @IsNumberString()
   @IsOptional()
-  maxPrice?: string;
-
   @IsEnum(RentSchedule)
-  @IsOptional()
   rentSchedule?: RentSchedule;
 
-  @IsNumberString()
   @IsOptional()
-  bedrooms?: string;
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
+  bedrooms?: number;
 
-  @IsNumberString()
   @IsOptional()
-  bathrooms?: string;
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
+  bathrooms?: number;
 
+  @IsOptional()
   @IsEnum(RoomType)
-  @IsOptional()
   roomType?: RoomType;
 
+  @IsOptional()
   @IsArray()
-  @IsEnum(Amenities, { each: true })
-  @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.split(',') : value,
-  )
-  amenities?: Amenities[];
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  amenities?: string[];
 
-  @IsDateString()
   @IsOptional()
-  moveInDate?: string;
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
+  @Min(1)
+  page?: number;
 
-  @IsNumberString()
   @IsOptional()
-  page?: string;
-
-  @IsNumberString()
-  @IsOptional()
-  limit?: string;
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
+  @Min(1)
+  limit?: number;
 }
 
 // export class FindByUserIdDto {
