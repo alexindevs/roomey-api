@@ -16,6 +16,20 @@ export class RoomListingService {
     private roomListingModel: Model<RoomListingDocument>,
   ) {}
 
+  async findByUserIdAndStatus(
+    userId: string,
+    isActive: boolean = true,
+  ): Promise<SuccessResponse> {
+    const roomListings = await this.roomListingModel
+      .find({ user_id: userId, is_active: isActive })
+      .exec();
+
+    return {
+      message: `Room listings for user ${userId} fetched successfully`,
+      code: statusCodes.OK,
+      data: roomListings,
+    };
+  }
   async searchRoomListings(params: SearchRoomListingsDto): Promise<any> {
     const {
       searchText,

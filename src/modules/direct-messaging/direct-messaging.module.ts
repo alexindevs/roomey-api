@@ -9,6 +9,8 @@ import {
 } from './direct-messaging.schema';
 import { Conversation, ConversationSchema } from './direct-messaging.schema';
 import { Message, MessageSchema } from './direct-messaging.schema';
+import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
+import { UserSchema, User } from '../authentication/authentication.schema';
 
 @Module({
   imports: [
@@ -16,9 +18,11 @@ import { Message, MessageSchema } from './direct-messaging.schema';
       { name: MessagingConnection.name, schema: MessagingConnectionSchema },
       { name: Conversation.name, schema: ConversationSchema },
       { name: Message.name, schema: MessageSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   providers: [
+    AccessTokenService,
     DirectMessagingGateway,
     DirectMessagingService,
     ConnectionService,

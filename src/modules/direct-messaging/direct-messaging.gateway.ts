@@ -8,11 +8,18 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtAuthGuard } from '../authentication/guards//jwt-auth.guard'; // Import your guard
 import { DirectMessagingService } from './direct-messaging.service';
 import { ConnectionService } from './messaging-connection.service';
 import { ListingType } from './direct-messaging.schema';
+import {
+  ForbiddenException,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 
 @WebSocketGateway({ cors: true })
+@UseGuards(JwtAuthGuard)
 export class DirectMessagingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -24,7 +31,7 @@ export class DirectMessagingGateway
   ) {}
 
   async handleConnection(@ConnectedSocket() client: Socket) {
-    const userId = client.handshake.query.userId as string;
+    const userId = client['user'].userId;
 
     if (userId) {
       await this.connectionService.addConnection(userId, client.id);
@@ -49,8 +56,23 @@ export class DirectMessagingGateway
   async handleCreateConversation(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    data: { userIds: string[]; listingType: ListingType; listingId?: string },
+    data: {
+      userIds: [string, string];
+      listingType: ListingType;
+      listingId?: string;
+    },
   ) {
+    const clientId = client['user'].userId;
+    if (!clientId || !data.userIds.includes(clientId)) {
+      throw new UnauthorizedException(
+        'You cannot create a conversation between other people',
+      );
+    }
+
+    if (data.userIds.length < 2) {
+      throw new ForbiddenException('Please select only two users.');
+    }
+
     const conversation = await this.directMessagingService.createConversation(
       data.userIds,
       data.listingType,
@@ -133,10 +155,23 @@ export class DirectMessagingGateway
   }
 
   @SubscribeMessage('getUserConversations')
-  async handleGetUserConversations(@ConnectedSocket() client: Socket) {
+  async handleGetUserConversations(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { page?: number; limit?: number }, // Add pagination data from the client
+  ) {
     const userId = client.handshake.query.userId as string;
+
+    // Destructure page and limit from the data sent by the client, with defaults
+    const { page = 1, limit = 20 } = data;
+    // Use the new paginated method
     const conversations =
-      await this.directMessagingService.getUserConversations(userId);
+      await this.directMessagingService.getUserConversations(
+        userId,
+        page,
+        limit,
+      );
+
+    // Emit the paginated conversations to the client
     client.emit('getUserConversationsResponse', conversations);
   }
 }

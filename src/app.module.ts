@@ -8,7 +8,8 @@ import { SavedListingsModule } from './modules/saved-listings/saved-listings.mod
 import { RoommateListingModule } from './modules/roommate-listing/roommate-listing.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { DirectMessagingModule } from './modules/direct-messaging/direct-messaging.module';
-import { NotificationModule } from './modules/notification/notification.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { NotificationModule } from './modules/notification/notification.module';
     RoommateListingModule,
     ProfilesModule,
     DirectMessagingModule,
-    NotificationModule,
+    NotificationsModule,
+    PushNotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

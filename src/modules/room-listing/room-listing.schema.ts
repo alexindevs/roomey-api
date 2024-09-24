@@ -74,7 +74,6 @@ export class Location {
       enum: ['Point'],
       default: 'Point',
     },
-    // format: lng, lat
     coordinates: {
       type: [Number],
       default: [0, 0],

@@ -123,4 +123,17 @@ export class RoomListingController {
       data: response.data,
     });
   }
+
+  @Get('my-listings')
+  @UseGuards(JwtAuthGuard)
+  async getRoomListingsByUserId(
+    @Req() req: any,
+    @Query('isActive') isActive: string,
+  ) {
+    const activeStatus = isActive === 'false' ? false : true; // Default to true if no query parameter is provided
+    return this.roomListingService.findByUserIdAndStatus(
+      req.user.userId,
+      activeStatus,
+    );
+  }
 }

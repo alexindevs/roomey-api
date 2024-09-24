@@ -128,7 +128,8 @@ export class AuthenticationService {
     if (!user) {
       return {
         code: statusCodes.NOT_FOUND,
-        message: 'Account with associated information not found.',
+        message:
+          'Account with associated information not found. Please create an account.',
         data: null,
       };
     }
@@ -177,7 +178,7 @@ export class AuthenticationService {
     );
     return {
       code: statusCodes.OK,
-      message: 'User verified successfully. You can now login.',
+      message: 'User verified successfully.',
       data: newUser,
     };
   }
@@ -198,7 +199,8 @@ export class AuthenticationService {
     } else {
       return {
         code: statusCodes.NOT_FOUND,
-        message: 'Account with associated information not found.',
+        message:
+          'Account with associated information not found. Please create an account.',
         data: null,
       };
     }

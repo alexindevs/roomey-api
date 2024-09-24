@@ -53,10 +53,66 @@ export class DirectMessagingService {
     return this.conversationModel.findById(conversationId);
   }
 
-  async getUserConversations(userId: string): Promise<ConversationDocument[]> {
-    return this.conversationModel.find({
-      user_ids: new Types.ObjectId(userId),
-    });
+  async getUserConversations(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<ConversationDocument[]> {
+    const skip = (page - 1) * limit; // Calculate how many documents to skip
+
+    return this.conversationModel
+      .aggregate([
+        {
+          $match: {
+            user_ids: new Types.ObjectId(userId), // Match conversations involving the user
+          },
+        },
+        {
+          // Lookup the latest message in the conversation
+          $lookup: {
+            from: 'messages', // Name of the message collection
+            localField: '_id', // Field in the conversation collection
+            foreignField: 'conversation_id', // Field in the message collection
+            as: 'messages', // Output array of messages
+          },
+        },
+        {
+          // Sort the messages in each conversation by sent_at descending to get the latest message
+          $addFields: {
+            latestMessage: {
+              $arrayElemAt: [
+                { $sortArray: { input: '$messages', sortBy: { sent_at: -1 } } },
+                0,
+              ],
+            },
+          },
+        },
+        {
+          // Sort conversations by the latest message's sent_at field
+          $sort: { 'latestMessage.sent_at': -1 },
+        },
+        {
+          // Skip and limit for pagination
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+        {
+          // Project the required fields (you can add/remove fields as needed)
+          $project: {
+            _id: 1,
+            user_ids: 1,
+            room_listing_id: 1,
+            roommate_listing_id: 1,
+            listing_type: 1,
+            created_at: 1,
+            updated_at: 1,
+            latestMessage: 1, // Include the latest message in the output
+          },
+        },
+      ])
+      .exec();
   }
 
   async sendMessage(

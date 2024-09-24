@@ -107,7 +107,7 @@ export class SavedListingsController {
     @Param('roommateId') roommateId: string,
   ) {
     try {
-      const userId = req.user.userId; // Extract userId from the request
+      const userId = req.user.userId;
       const deletedRoommate =
         await this.savedListingsService.deleteUserSavedRoommates(
           userId,
