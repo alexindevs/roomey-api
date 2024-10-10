@@ -63,11 +63,12 @@ export class SavedListingsService {
 
   async findUserSavedRoommates(user_id: string): Promise<SavedRoommates[]> {
     try {
-      return await this.roommateModel
+      const results = await this.roommateModel
         .find({ user_id })
         .populate('roommate_id')
-        .populate('user_id')
         .exec();
+
+      return results;
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException(

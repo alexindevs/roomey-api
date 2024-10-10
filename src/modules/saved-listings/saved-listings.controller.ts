@@ -129,7 +129,7 @@ export class SavedListingsController {
   @UseGuards(JwtAuthGuard)
   async findUserSavedRoommates(@Req() req: any) {
     try {
-      const savedRoommates = this.savedListingsService.findUserSavedRoommates(
+      const savedRoommates = await this.savedListingsService.findUserSavedRoommates(
         req.user.userId,
       );
       if (!savedRoommates) {
