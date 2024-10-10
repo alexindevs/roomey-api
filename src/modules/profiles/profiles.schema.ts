@@ -72,7 +72,7 @@ export class UserProfile {
   @Prop({ required: true, enum: Gender, type: String })
   gender: Gender;
 
-  @Prop({ required: true, type: String })
+  @Prop({ type: String })
   profile_picture: string;
 
   @Prop({ required: true, type: String })

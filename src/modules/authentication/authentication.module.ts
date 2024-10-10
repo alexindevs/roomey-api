@@ -7,6 +7,7 @@ import { RefreshTokenSchema, UserSchema } from './authentication.schema';
 import { OtpModule } from '../otp/otp.module';
 import { AccessTokenService } from './tokens/accesstoken.service';
 import { RefreshTokenService } from './tokens/refreshtoken.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -14,6 +15,7 @@ import { RefreshTokenService } from './tokens/refreshtoken.service';
       { name: 'RefreshToken', schema: RefreshTokenSchema },
     ]),
     OtpModule,
+    NotificationsModule,
   ],
   providers: [
     AuthenticationService,
@@ -22,5 +24,6 @@ import { RefreshTokenService } from './tokens/refreshtoken.service';
     EmailService,
   ],
   controllers: [AuthenticationController],
+  exports: [AccessTokenService],
 })
 export class AuthenticationModule {}

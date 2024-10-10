@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RoomListingSchema } from './room-listing.schema';
 import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
 import { UserSchema } from '../authentication/authentication.schema';
+import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { UserSchema } from '../authentication/authentication.schema';
       },
     ]),
   ],
-  providers: [AccessTokenService, RoomListingService],
+  providers: [AccessTokenService, RoomListingService, CloudinaryConfig],
   controllers: [RoomListingController],
 })
 export class RoomListingModule {}

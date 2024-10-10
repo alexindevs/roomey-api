@@ -5,14 +5,9 @@ import {
   IsArray,
   IsNumber,
   IsOptional,
-  ArrayMinSize,
-  ArrayMaxSize,
-  ValidateIf,
   Min,
-  IsLongitude,
   IsInt,
   ArrayNotEmpty,
-  IsLatitude,
 } from 'class-validator';
 import {
   ApartmentType,
@@ -31,11 +26,6 @@ export class CreateRoomListingDto {
   @IsEnum(RoomType)
   @IsNotEmpty()
   room_type: RoomType;
-
-  @IsArray()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(8)
-  images: string[];
 
   @IsNotEmpty()
   location: {
@@ -146,17 +136,19 @@ export class SearchRoomListingsDto {
   @IsString()
   searchText?: string;
 
-  @ValidateIf((o) => o.lng !== undefined || o.radius !== undefined)
-  @IsLatitude()
+  @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
   lat?: number;
 
-  @ValidateIf((o) => o.lat !== undefined || o.radius !== undefined)
-  @IsLongitude()
+  @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
   lng?: number;
 
-  @ValidateIf((o) => o.lat !== undefined && o.lng !== undefined)
+  @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
   @IsNumber()
-  @Min(0)
   radius?: number;
 
   @IsOptional()
@@ -188,6 +180,12 @@ export class SearchRoomListingsDto {
   roomType?: RoomType;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map((item) => item.trim());
+    }
+    return value;
+  })
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })

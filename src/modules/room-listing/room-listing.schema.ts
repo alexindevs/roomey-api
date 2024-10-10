@@ -94,6 +94,9 @@ export class Location {
   street_number: number;
 
   @Prop({ required: true, type: String })
+  uid: string;
+
+  @Prop({ required: true, type: String })
   city: string;
 
   @Prop({ required: true, type: String })
@@ -113,7 +116,7 @@ class RoommateSpec {
 
 export type RoomListingDocument = RoomListing & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class RoomListing {
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   user_id: string;
@@ -142,7 +145,7 @@ export class RoomListing {
   @Prop({ required: true, default: true, type: Boolean })
   is_active: boolean;
 
-  @Prop({ required: true, type: Array, minlength: 1, maxlength: 8 })
+  @Prop({ type: Array, minlength: 1, maxlength: 8 })
   images: string[];
 
   @Prop({ required: true, type: Number })

@@ -14,16 +14,21 @@ export class NotificationsQueue {
     userId: string,
     title: string,
     description: string,
-    type: NotificationType,
+    type: NotificationType[],
     purpose: NotificationActions,
   ) {
-    await this.notificationsQueue.add('send_notification', {
-      userId,
-      title,
-      description,
-      type,
-      purpose,
-    });
+    try {
+      await this.notificationsQueue.add('send_notification', {
+        userId,
+        title,
+        description,
+        type,
+        purpose,
+      });
+      console.log('Notification Job Added');
+    } catch (error) {
+      console.error('Error adding notification job:', error);
+    }
   }
 
   async addBulkNotificationJob(

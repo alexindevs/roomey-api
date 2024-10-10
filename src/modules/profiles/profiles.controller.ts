@@ -8,15 +8,26 @@ import {
   Param,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { JwtAuthGuard } from 'src/modules/authentication/guards/jwt-auth.guard';
 import { CreateUserProfileDto } from './profiles.dto';
 import { statusCodes } from 'src/shared/constants';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
 
 @Controller('profiles')
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) {}
+  constructor(
+    private readonly profilesService: ProfilesService,
+    private readonly cloudinaryService: CloudinaryConfig,
+  ) {}
 
   /**
    * Get a profile by user ID
@@ -57,6 +68,48 @@ export class ProfilesController {
       ...createUserProfileDto,
       user_id: req.user.userId,
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-picture')
+  @UseInterceptors(
+    FileInterceptor('profile_picture', {
+      storage: diskStorage({
+        destination: './uploads', // Temporary storage
+        filename: (req, file, cb) => {
+          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          const ext = path.extname(file.originalname);
+          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB file size limit
+      },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Unsupported file format'), false);
+        }
+      },
+    }),
+  )
+  async uploadProfilePicture(
+    @UploadedFile() profilePicture: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    const userId = req.user.userId;
+
+    // Call service to upload profile picture to Cloudinary
+    const uploadedImageUrl = await this.cloudinaryService.uploadFile(
+      profilePicture.path,
+    );
+
+    // Update user profile with the new image URL
+    return this.profilesService.uploadProfilePicture(
+      userId,
+      uploadedImageUrl.url,
+    );
   }
 
   /**

@@ -65,6 +65,9 @@ export class User {
   })
   notification_frequency: NotificationFrequency;
 
+  @Prop({ type: String, default: null })
+  push_token: string;
+
   @Prop({ type: Boolean, default: false })
   account_deactivated: boolean;
 

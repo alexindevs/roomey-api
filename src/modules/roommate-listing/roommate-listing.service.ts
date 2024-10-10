@@ -5,9 +5,12 @@ import {
   RoommateListing,
   RoommateListingDocument,
 } from './roommate-listing.schema';
+import shortie from 'short-uuid';
 import { CreateRoommateListingDto } from './roommate-listing.dto';
 import { UpdateRoommateListingDto } from './roommate-listing.dto';
 import { UserProfile, UserProfileDocument } from '../profiles/profiles.schema';
+import { statusCodes } from 'src/shared/constants';
+import { SuccessResponse } from 'src/shared/responses';
 
 @Injectable()
 export class RoommateListingService {
@@ -19,13 +22,40 @@ export class RoommateListingService {
   ) {}
 
   async create(createRoommateListingDto: CreateRoommateListingDto) {
-    const newListing = await this.roommateListingModel.create(
-      createRoommateListingDto,
-    );
+    const uuid = shortie.generate();
+    const newListing = await this.roommateListingModel.create({
+      ...createRoommateListingDto,
+      uid: uuid,
+    });
     return {
       message: 'Roommate listing created successfully',
       data: newListing,
       code: 201,
+    };
+  }
+
+  /**
+   * Uploads images for a given roommate listing. Throws an error if the user is not authorized
+   * to upload images for the given listing.
+   * @param listingId The id of the listing to upload images for
+   * @param userId The id of the user uploading the images
+   * @param images The images to upload. Should be an array of strings, where each string is the URL of the image.
+   * @returns A SuccessResponse with a code of 200 and the updated listing data
+   */
+  async uploadImages(listingId: string, userId: string, images: string[]) {
+    const listing = await this.roommateListingModel.findById(listingId).exec();
+    if (!listing) {
+      throw new NotFoundException('Roommate listing not found');
+    }
+    if (listing.user_id !== userId) {
+      throw new NotFoundException('You are not authorized to upload images');
+    }
+    listing.images = images;
+    await listing.save();
+    return {
+      message: 'Roommate listing images uploaded successfully',
+      data: listing,
+      code: 200,
     };
   }
 
@@ -125,6 +155,34 @@ export class RoommateListingService {
       return scoreB - scoreA; // Sort in descending order
     });
 
+    if (!roommateListings || roommateListings.length === 0) {
+      return {
+        message: 'No roommate listings found for your preferences',
+        data: [],
+        pagination: {
+          currentPage: page,
+          pageSize: pageSize,
+          totalPages: totalPages,
+          totalListings: totalListings,
+        },
+        code: 200,
+      };
+    }
+
+    if (page > totalPages) {
+      return {
+        message: 'No more listings available',
+        data: [],
+        pagination: {
+          currentPage: page,
+          pageSize: pageSize,
+          totalPages: totalPages,
+          totalListings: totalListings,
+        },
+        code: 200,
+      };
+    }
+
     // Prepare the response with pagination metadata
     return {
       message: 'Roommate listings fetched successfully',
@@ -196,6 +254,39 @@ export class RoommateListingService {
     };
   }
 
+  async findByUserIdAndStatus(
+    userId: string,
+    isActive: boolean = true,
+  ): Promise<SuccessResponse> {
+    const listings = await this.roommateListingModel
+      .find({ user_id: userId, is_active: isActive })
+      .exec();
+
+    if (!listings || listings.length === 0) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        message: `Roommate listings for user ${userId} not found`,
+        data: null,
+      };
+    }
+
+    return {
+      message: `Roommate listings for user ${userId} fetched successfully`,
+      code: statusCodes.OK,
+      data: listings,
+    };
+  }
+
+  /**
+   * Updates a roommate listing.
+   *
+   * @param id - The id of the roommate listing to update
+   * @param updateRoommateListingDto - The data to update the roommate listing with
+   *
+   * @returns A SuccessResponse with a code of 200 and the updated listing data
+   *
+   * @throws NotFoundException - If the roommate listing is not found
+   */
   async update(id: string, updateRoommateListingDto: UpdateRoommateListingDto) {
     const updatedListing = await this.roommateListingModel
       .findByIdAndUpdate(id, updateRoommateListingDto, {

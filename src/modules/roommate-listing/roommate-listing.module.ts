@@ -8,6 +8,7 @@ import { UserSchema } from '../authentication/authentication.schema';
 import { ProfilesModule } from '../profiles/profiles.module';
 import { ProfilesService } from '../profiles/profiles.service';
 import { UserProfileSchema } from '../profiles/profiles.schema';
+import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
 
 @Module({
   imports: [
@@ -18,7 +19,12 @@ import { UserProfileSchema } from '../profiles/profiles.schema';
     ]),
     ProfilesModule,
   ],
-  providers: [AccessTokenService, ProfilesService, RoommateListingService],
+  providers: [
+    AccessTokenService,
+    ProfilesService,
+    RoommateListingService,
+    CloudinaryConfig,
+  ],
   controllers: [RoommateListingController],
 })
 export class RoommateListingModule {}

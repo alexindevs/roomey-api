@@ -1,0 +1,250 @@
+:root {
+  --default-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, 'Helvetica Neue', Helvetica,
+    Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei UI', 'Microsoft Yahei', 'Source Han Sans CN', sans-serif;
+}
+
+*,
+.main-container {
+  box-sizing: border-box;
+}
+
+input,
+select,
+textarea,
+button {
+  outline: 0;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 375px;
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.section,
+.box,
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: 24px;
+  position: relative;
+}
+
+.section,
+.box {
+  gap: 16px;
+}
+
+.wrapper {
+  align-items: center;
+  padding: 32px;
+  gap: 8px;
+}
+
+.pic {
+  align-self: stretch;
+  height: 95px;
+  background: url('./roomey.png') no-repeat center;
+  background-size: cover;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.text,
+.text-2,
+.text-4 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: stretch;
+  position: relative;
+  width: 311px;
+  color: rgba(25, 25, 25, 0.8);
+  font-family: Inter, var(--default-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+}
+
+.text {
+  height: 144px;
+  color: #333333;
+  z-index: 2;
+}
+
+.text-2 {
+  height: 66px;
+  z-index: 4;
+}
+
+.text-4 {
+  height: 110px;
+  z-index: 7;
+}
+
+.section-2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 169px;
+  padding: 16px;
+  background: #ff6899;
+  border-radius: 8px;
+  z-index: 5;
+}
+
+.text-3 {
+  position: relative;
+  height: 22px;
+  color: #ffffff;
+  font-family: Inter, var(--default-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 21.784px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 6;
+  text-decoration: none;
+}
+
+.text-5,
+.text-6,
+.text-7,
+.text-8 {
+  position: relative;
+  font-family: Inter, var(--default-font-family);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: left;
+}
+
+.text-5,
+.text-8 {
+  color: rgba(25, 25, 25, 0.8);
+  text-decoration: none;
+}
+
+.text-6 {
+  color: #ff6899;
+  text-decoration: underline;
+}
+
+.text-7 {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.line {
+  flex-shrink: 0;
+  position: relative;
+  width: 125px;
+  height: 1px;
+  background-color: #ff6899;
+  z-index: 9;
+}
+
+.section-3,
+.box-2,
+.text-9,
+.text-a {
+  align-self: stretch;
+  position: relative;
+  font-family: Inter, var(--default-font-family);
+  font-weight: 400;
+  text-align: center;
+}
+
+.section-3 {
+  font-size: 18px;
+  line-height: 24px;
+  text-align: left;
+  z-index: 8;
+}
+
+.box-2,
+.text-9,
+.text-a {
+  font-size: 12px;
+  line-height: 16px;
+  color: #999999;
+  z-index: 16;
+}
+
+.section-4 {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 120px;
+  z-index: 11;
+}
+
+.twitter,
+.facebook,
+.linkedln {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.twitter {
+  background: url('./twitter.png') no-repeat center;
+  z-index: 12;
+}
+
+.facebook {
+  background: url('./facebook.png') no-repeat center;
+  z-index: 13;
+}
+
+.linkedln {
+  background: url('./linkedln.png') no-repeat center;
+  z-index: 14;
+}
+
+.logo {
+  align-self: stretch;
+  height: 32px;
+  background: url('./logo.png') no-repeat center;
+  background-size: contain;
+  z-index: 15;
+}
+
+.code-container {
+display: flex;
+align-items: center;
+justify-content: center;
+flex-wrap: nowrap;
+gap: 10px;
+position: relative;
+width: 200px;
+margin: 0 auto;
+padding: 12px 8px;
+background: rgba(255, 104, 153, 0.1);
+}
+.code-text {
+flex-grow: 1;
+flex-shrink: 0;
+flex-basis: auto;
+position: relative;
+height: 24px;
+color: #ff6899;
+font-family: Inter, var(--default-font-family);
+font-size: 24px;
+font-weight: 500;
+line-height: 24px;
+text-align: center;
+white-space: nowrap;
+letter-spacing: 12px;
+}

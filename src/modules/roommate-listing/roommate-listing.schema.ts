@@ -113,7 +113,7 @@ export enum GenderPreference {
 
 export type RoommateListingDocument = HydratedDocument<RoommateListing>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class RoommateListing {
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   user_id: string;
@@ -138,6 +138,9 @@ export class RoommateListing {
 
   @Prop({ required: true, type: Date })
   move_in_date: Date;
+
+  @Prop({ required: true, type: String })
+  uid: string;
 
   @Prop({ required: true, type: Boolean, default: true })
   is_active: boolean;

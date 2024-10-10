@@ -1,5 +1,4 @@
 import {
-  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -31,11 +30,6 @@ export class CreateRoommateListingDto {
   @IsNotEmpty()
   @IsNumber()
   age: number;
-
-  @IsArray()
-  @ArrayMaxSize(5)
-  @IsString({ each: true })
-  images: string[];
 
   @IsNotEmpty()
   @IsNumber()

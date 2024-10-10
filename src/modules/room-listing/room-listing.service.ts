@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { SuccessResponse } from 'src/shared/responses';
 import { statusCodes } from 'src/shared/constants';
 import { RoomListing, RoomListingDocument } from './room-listing.schema';
+import shortie from 'short-uuid';
 import {
   CreateRoomListingDto,
   SearchRoomListingsDto,
@@ -11,6 +12,11 @@ import {
 
 @Injectable()
 export class RoomListingService {
+  /**
+   * Constructs a new instance of the RoomListingService.
+   *
+   * @param roomListingModel - The Mongoose model for RoomListing documents.
+   */
   constructor(
     @InjectModel(RoomListing.name)
     private roomListingModel: Model<RoomListingDocument>,
@@ -24,12 +30,21 @@ export class RoomListingService {
       .find({ user_id: userId, is_active: isActive })
       .exec();
 
+    if (!roomListings || roomListings.length === 0) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        message: `Room listings for user ${userId} not found`,
+        data: null,
+      };
+    }
+
     return {
       message: `Room listings for user ${userId} fetched successfully`,
       code: statusCodes.OK,
       data: roomListings,
     };
   }
+
   async searchRoomListings(params: SearchRoomListingsDto): Promise<any> {
     const {
       searchText,
@@ -98,7 +113,7 @@ export class RoomListingService {
       const [listings, total] = await Promise.all([
         this.roomListingModel
           .find(filters)
-          .sort({ rent_amount: 'asc' })
+          .sort({ updated_at: 'desc' }) // Sort by the most recently updated
           .skip(skip)
           .limit(limit)
           .exec(),
@@ -128,19 +143,103 @@ export class RoomListingService {
     }
   }
 
+  async deactivateRoomListing(
+    id: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    const deactivatedListing = await this.roomListingModel.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      { is_active: false },
+      { new: true },
+    );
+
+    if (!deactivatedListing) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        message: 'Room listing not found',
+        data: null,
+      };
+    }
+
+    return {
+      message: 'Room listing deactivated successfully',
+      code: statusCodes.OK,
+      data: deactivatedListing,
+    };
+  }
+
+  async reactivateRoomListing(
+    id: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    const reactivatedListing = await this.roomListingModel.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      { is_active: true },
+      { new: true },
+    );
+
+    if (!reactivatedListing) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        message: 'Room listing not found',
+        data: null,
+      };
+    }
+
+    return {
+      message: 'Room listing reactivated successfully',
+      code: statusCodes.OK,
+      data: reactivatedListing,
+    };
+  }
+
   async createRoomListing(
     user_id: string,
     roomListing: CreateRoomListingDto,
   ): Promise<SuccessResponse> {
+    const uuid = shortie.generate();
     const newRoomListing = new this.roomListingModel({
       user_id,
       ...roomListing,
+      uid: uuid,
     });
     await newRoomListing.save();
     return {
       message: 'Room listing created successfully',
       code: statusCodes.CREATED,
       data: newRoomListing,
+    };
+  }
+
+  async uploadRoomImages(
+    roomId: string,
+    userId: string,
+    images: string[],
+  ): Promise<SuccessResponse> {
+    const roomListing = await this.roomListingModel.findById(roomId).exec();
+    if (!roomListing) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        message: 'Room listing not found',
+        data: null,
+      };
+    }
+
+    if (roomListing.user_id !== userId) {
+      return {
+        code: statusCodes.FORBIDDEN,
+        message:
+          'You are not authorized to upload images for this room listing',
+        data: null,
+      };
+    }
+
+    roomListing.images = images;
+    await roomListing.save();
+    return {
+      message: 'Room images uploaded successfully',
+      code: statusCodes.OK,
+      data: roomListing,
     };
   }
 

@@ -124,4 +124,27 @@ export class SavedListingsController {
       );
     }
   }
+
+  @Get('roommates')
+  @UseGuards(JwtAuthGuard)
+  async findUserSavedRoommates(@Req() req: any) {
+    try {
+      const savedRoommates = this.savedListingsService.findUserSavedRoommates(
+        req.user.userId,
+      );
+      if (!savedRoommates) {
+        throw new NotFoundException('No saved roommates found');
+      }
+      return {
+        code: 200,
+        message: 'Saved roommates fetched successfully',
+        data: savedRoommates,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Error fetching saved roommates',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

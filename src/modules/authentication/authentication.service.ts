@@ -9,6 +9,11 @@ import { AccessTokenService } from './tokens/accesstoken.service';
 import { RefreshTokenService } from './tokens/refreshtoken.service';
 import { EmailService } from '../emails/email.service';
 import { OtpService } from '../otp/otp.service';
+import { NotificationsQueue } from '../notifications/notifications.queue';
+import {
+  NotificationActions,
+  NotificationType,
+} from '../notifications/notifications.schema';
 
 @Injectable()
 export class AuthenticationService {
@@ -18,6 +23,7 @@ export class AuthenticationService {
     private readonly RTS: RefreshTokenService,
     private readonly email: EmailService,
     private readonly otp: OtpService,
+    private readonly notification: NotificationsQueue,
   ) {}
 
   async register(
@@ -57,12 +63,18 @@ export class AuthenticationService {
     const OTP = await this.otp.generate('20m', user._id, 'Email Verification');
 
     // Send verification email
-    const subject = 'Verification Code';
-    const body =
-      'Your verification code is: ' +
-      OTP.token +
-      '. It will expire in 20 minutes.';
-    await this.email.sendEmail(user.email, subject, body);
+    const context = {
+      name: first_name,
+      code: OTP.token,
+      expiry: 20,
+    };
+
+    await this.email.sendTemplateEmail(
+      email,
+      'Verify Your Email',
+      'verification',
+      context,
+    );
 
     // Add new token to the Refresh Token Service (RTS)
     console.log(user, user._id);
@@ -142,12 +154,19 @@ export class AuthenticationService {
     }
     const OTP = await this.otp.generate('20m', user._id, 'Email Verification');
 
-    const subject = 'Verification Code';
-    const body =
-      'Your verification code is: ' +
-      OTP.token +
-      '. It will expire in 20 minutes.';
-    await this.email.sendEmail(user.email, subject, body);
+    // Send verification email
+    const context = {
+      name: user.first_name,
+      code: OTP.token,
+      expiry: 20,
+    };
+
+    await this.email.sendTemplateEmail(
+      email,
+      'Verify Your Email',
+      'verification',
+      context,
+    );
     return {
       code: statusCodes.OK,
       message: 'Email with verification code sent successfully',
@@ -176,6 +195,15 @@ export class AuthenticationService {
       { verified: true },
       { new: true },
     );
+
+    await this.notification.addNotificationJob(
+      String(verified.user_id),
+      "You've been verified!",
+      'You have been verified successfully! You can now create listings on the platform. Welcome to Roomey!',
+      [NotificationType.EMAIL, NotificationType.PUSH, NotificationType.IN_APP],
+      NotificationActions.PROFILE_VERIFIED,
+    );
+
     return {
       code: statusCodes.OK,
       message: 'User verified successfully.',
@@ -188,9 +216,16 @@ export class AuthenticationService {
     if (user) {
       const email = user.email;
       const OTP = await this.otp.generate('20m', user._id, 'Password Reset');
-      const subject = 'Password Reset';
-      const body = 'Use this OTP to reset your password: ' + OTP.token;
-      await this.email.sendEmail(email, subject, body);
+      const context = {
+        name: user.first_name,
+        token: OTP.token,
+      };
+      await this.email.sendTemplateEmail(
+        email,
+        'Reset your password',
+        'reset-password',
+        context,
+      );
       return {
         code: statusCodes.OK,
         message: 'Email with reset instructions sent successfully',

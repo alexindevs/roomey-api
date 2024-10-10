@@ -39,6 +39,28 @@ export class ProfilesService {
     };
   }
 
+  async uploadProfilePicture(
+    userId: string,
+    uploadedImageUrl: string,
+  ): Promise<any> {
+    // Update user profile with the new profile picture URL
+    const updatedProfile = await this.userProfileModel.findOneAndUpdate(
+      { user_id: userId },
+      { profile_picture: uploadedImageUrl },
+      { new: true },
+    );
+
+    if (!updatedProfile) {
+      throw new BadRequestException('User profile not found');
+    }
+
+    return {
+      message: 'Profile picture uploaded successfully',
+      data: updatedProfile,
+      code: statusCodes.OK,
+    };
+  }
+
   /**
    * Fetches a user profile by its user ID
    * @param {string} userId - The user ID to search for

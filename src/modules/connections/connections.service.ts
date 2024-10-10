@@ -1,26 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {
-  MessagingConnection,
-  MessagingConnectionDocument,
-} from './direct-messaging.schema';
+import { Connection, ConnectionDocument } from './connections.schema';
 
 @Injectable()
 export class ConnectionService {
   constructor(
-    @InjectModel(MessagingConnection.name)
-    private connectionModel: Model<MessagingConnectionDocument>,
+    @InjectModel(Connection.name)
+    private connectionModel: Model<ConnectionDocument>,
   ) {}
 
   // Add a new connection when the user connects
   async addConnection(
     userId: string,
     socketId: string,
-  ): Promise<MessagingConnection> {
+    namespace: string,
+  ): Promise<Connection> {
     const connection = new this.connectionModel({
       user_id: userId,
       socket_id: socketId,
+      namespace: namespace,
       is_active: true,
     });
 
@@ -30,16 +29,29 @@ export class ConnectionService {
   // Mark the connection as inactive when the user disconnects
   async removeConnection(
     socketId: string,
-  ): Promise<MessagingConnection | null> {
+    namespace: string,
+  ): Promise<Connection | null> {
     return this.connectionModel.findOneAndUpdate(
-      { socket_id: socketId },
+      { socket_id: socketId, namespace: namespace },
       { is_active: false, disconnected_at: new Date() },
       { new: true },
     );
   }
 
-  // Optionally, get all active connections for a user
-  async getActiveConnections(userId: string): Promise<MessagingConnection[]> {
+  // Get all active connections for a user in a specific namespace
+  async getActiveConnections(
+    userId: string,
+    namespace: string,
+  ): Promise<Connection[]> {
+    return this.connectionModel.find({
+      user_id: userId,
+      namespace: namespace,
+      is_active: true,
+    });
+  }
+
+  // Get all active connections across namespaces
+  async getAllActiveConnections(userId: string): Promise<Connection[]> {
     return this.connectionModel.find({ user_id: userId, is_active: true });
   }
 }

@@ -10,7 +10,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtAuthGuard } from '../authentication/guards//jwt-auth.guard'; // Import your guard
 import { DirectMessagingService } from './direct-messaging.service';
-import { ConnectionService } from './messaging-connection.service';
+import { ConnectionService } from '../connections/connections.service';
 import { ListingType } from './direct-messaging.schema';
 import {
   ForbiddenException,
@@ -18,7 +18,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ cors: true, namespace: 'direct-messaging' })
 @UseGuards(JwtAuthGuard)
 export class DirectMessagingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -34,7 +34,11 @@ export class DirectMessagingGateway
     const userId = client['user'].userId;
 
     if (userId) {
-      await this.connectionService.addConnection(userId, client.id);
+      await this.connectionService.addConnection(
+        userId,
+        client.id,
+        'messaging',
+      );
       console.log(`Client connected: ${client.id}, User: ${userId}`);
 
       // Join a room for the user's ID to allow direct messaging
@@ -49,7 +53,7 @@ export class DirectMessagingGateway
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    await this.connectionService.removeConnection(client.id);
+    await this.connectionService.removeConnection(client.id, 'messaging');
   }
 
   @SubscribeMessage('createConversation')

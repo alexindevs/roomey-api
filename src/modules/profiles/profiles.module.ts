@@ -5,6 +5,7 @@ import { ProfilesController } from './profiles.controller';
 import { UserProfile, UserProfileSchema } from './profiles.schema'; // Adjust path to your JWT strategy file
 import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
 import { UserSchema } from '../authentication/authentication.schema';
+import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { UserSchema } from '../authentication/authentication.schema';
       },
     ]),
   ],
-  providers: [AccessTokenService, ProfilesService], // Register the ProfilesService and JwtStrategy for DI
+  providers: [AccessTokenService, ProfilesService, CloudinaryConfig], // Register the ProfilesService and JwtStrategy for DI
   controllers: [ProfilesController], // Register the ProfilesController
 })
 export class ProfilesModule {}

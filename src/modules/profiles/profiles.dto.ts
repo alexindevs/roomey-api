@@ -9,13 +9,13 @@ import {
   ValidateNested,
   IsObject,
 } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import {
   Gender,
   LifestyleHabits,
   ChildrenOptions,
   PersonalityTraits,
 } from './profiles.schema';
-import { Type } from 'class-transformer';
 
 class LocationDto {
   @IsNotEmpty()
@@ -33,22 +33,20 @@ class BudgetDto {
   currency: string;
 
   @IsNotEmpty()
+  @Transform(({ value }) => Number(value)) // Transform string to number
   @IsNumber()
   amount: number;
 }
 
 export class CreateUserProfileDto {
   @IsNotEmpty()
+  @Transform(({ value }) => Number(value)) // Transform string to number
   @IsNumber()
   age: number;
 
   @IsNotEmpty()
   @IsEnum(Gender)
   gender: Gender;
-
-  @IsNotEmpty()
-  @IsString()
-  profile_picture: string;
 
   @IsNotEmpty()
   @IsString()
