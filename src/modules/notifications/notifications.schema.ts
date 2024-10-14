@@ -1,18 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-// Define the Notification document type
 export type NotificationDocument = HydratedDocument<Notification>;
 
-// Enum for the types of notifications
 export enum NotificationType {
   EMAIL = 'Email',
-  // SMS = 'SMS',
   PUSH = 'Push',
   IN_APP = 'In_App',
 }
 
-// Enum for the actions that trigger notifications
 export enum NotificationActions {
   NEW_LISTING = 'New Roommate or Room Listing Created',
   PASSWORD_UPDATE = 'Password Reset',

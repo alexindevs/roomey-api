@@ -44,9 +44,6 @@ export class User {
   @Prop({ required: true, default: false, type: Boolean })
   verified: boolean;
 
-  @Prop({ required: true, default: true, type: Boolean })
-  active: boolean;
-
   @Prop({ required: true, type: String, default: '' })
   phone_number: string;
 

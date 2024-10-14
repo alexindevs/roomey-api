@@ -8,6 +8,7 @@ import { AccessTokenService } from '../authentication/tokens/accesstoken.service
 import { UserSchema, User } from '../authentication/authentication.schema';
 import { ConnectionService } from '../connections/connections.service';
 import { ConnectionSchema } from '../connections/connections.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ConnectionSchema } from '../connections/connections.schema';
       { name: User.name, schema: UserSchema },
       { name: 'Connection', schema: ConnectionSchema },
     ]),
+    NotificationsModule,
   ],
   providers: [
     ConnectionService,

@@ -264,4 +264,58 @@ export class AuthenticationService {
       data: null,
     };
   }
+
+  async deactivateUser(
+    userId: Types.ObjectId,
+  ): Promise<SuccessResponse | ErrorResponse> {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        error: 'User not found',
+      };
+    }
+
+    // Update the user's account_deactivated field to true
+    user.account_deactivated = true;
+    await user.save();
+
+    await this.notification.addNotificationJob(
+      String(user._id),
+      'Your account has been deactivated!',
+      'Your account has been deactivated successfully. You can no longer perform actions on the platform. To reactivate your account, please sign in.',
+      [NotificationType.EMAIL, NotificationType.PUSH, NotificationType.IN_APP],
+      NotificationActions.ACCOUNT_DEACTIVATED,
+    );
+
+    return {
+      code: statusCodes.OK,
+      message: 'User account deactivated successfully',
+      data: null,
+    };
+  }
+
+  async reactivateUser(
+    userId: Types.ObjectId,
+  ): Promise<SuccessResponse | ErrorResponse> {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      return {
+        code: statusCodes.NOT_FOUND,
+        error: 'User not found',
+      };
+    }
+
+    // Update the user's account_deactivated field to false
+    user.account_deactivated = false;
+    await user.save();
+
+    return {
+      code: statusCodes.OK,
+      message: 'User account reactivated successfully',
+      data: null,
+    };
+  }
 }

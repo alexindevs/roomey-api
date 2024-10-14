@@ -26,6 +26,7 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
+import { ActiveUserGuard } from '../authentication/guards/active-user.guard';
 
 @Controller('room-listings')
 export class RoomListingController {
@@ -35,7 +36,7 @@ export class RoomListingController {
   ) {}
 
   @Post(':roomId/upload-images')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @UsePipes(new ValidationPipe())
   @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 8 }]))
   async uploadRoomListing(
@@ -74,7 +75,7 @@ export class RoomListingController {
   }
 
   @Post('create')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @UsePipes(new ValidationPipe())
   async createRoomListing(
     @Body() createRoomListingDto: CreateRoomListingDto,
@@ -100,7 +101,7 @@ export class RoomListingController {
   }
 
   @Post(':id/deactivate')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async deactivateRoomListing(
     @Param('id') id: string,
     @Req() req: any,
@@ -116,7 +117,7 @@ export class RoomListingController {
   }
 
   @Post(':id/reactivate')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async reactivateRoomListing(
     @Param('id') id: string,
     @Req() req: any,
@@ -146,7 +147,7 @@ export class RoomListingController {
   }
 
   @Get('my-listings')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async getRoomListingsByUserId(
     @Req() req: any,
     @Query('isActive') isActive: string,
@@ -184,7 +185,7 @@ export class RoomListingController {
 
   @Patch(':id')
   @UsePipes(new ValidationPipe())
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async updateRoomListing(
     @Req() req: any,
     @Param('id') id: string,

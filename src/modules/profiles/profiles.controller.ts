@@ -21,6 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
+import { ActiveUserGuard } from '../authentication/guards/active-user.guard';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -57,7 +58,7 @@ export class ProfilesController {
    * @param {CreateUserProfileDto} createUserProfileDto - Profile data
    * @returns {UserProfile} - Created user profile
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @Post()
   async createProfile(
     @Body() createUserProfileDto: CreateUserProfileDto,
@@ -70,7 +71,7 @@ export class ProfilesController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @Post('upload-picture')
   @UseInterceptors(
     FileInterceptor('profile_picture', {
@@ -119,7 +120,7 @@ export class ProfilesController {
    * @param {CreateUserProfileDto} updateUserProfileDto - Profile data to update
    * @returns {UserProfile} - Updated user profile
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @Put(':userId')
   async updateProfile(
     @Param('userId') userId: string,
@@ -142,7 +143,7 @@ export class ProfilesController {
    * @param {string} userId - User ID
    * @returns {UserProfile} - Deleted user profile
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @Delete(':userId')
   async deleteProfile(@Param('userId') userId: string, @Request() req) {
     // Ensure that the authenticated user can only delete their own profile

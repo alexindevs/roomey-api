@@ -8,6 +8,11 @@ import {
   MessageDocument,
   ListingType,
 } from './direct-messaging.schema';
+import { NotificationsQueue } from '../notifications/notifications.queue';
+import {
+  NotificationActions,
+  NotificationType,
+} from '../notifications/notifications.schema';
 
 @Injectable()
 export class DirectMessagingService {
@@ -16,6 +21,7 @@ export class DirectMessagingService {
     private conversationModel: Model<ConversationDocument>,
     @InjectModel(Message.name)
     private messageModel: Model<MessageDocument>,
+    private notificationsQueue: NotificationsQueue,
   ) {}
 
   async createConversation(
@@ -129,9 +135,37 @@ export class DirectMessagingService {
     await message.save();
 
     // Update the conversation's updated_at timestamp
-    await this.conversationModel.findByIdAndUpdate(conversationId, {
-      updated_at: new Date(),
-    });
+    const conversation = await this.conversationModel.findByIdAndUpdate(
+      conversationId,
+      {
+        updated_at: new Date(),
+      },
+      { new: true },
+    );
+
+    const receiver_id = conversation.user_ids.find(
+      (id) => id.toString() !== senderId,
+    );
+
+    const formattedMessage =
+      'Someone sent you a new message on Roomey. Check it out: ' +
+      (content.length <= 150
+        ? content
+        : content.slice(0, content.slice(0, 150).lastIndexOf(' ')) + '...');
+
+    if (receiver_id) {
+      this.notificationsQueue.addNotificationJob(
+        String(receiver_id),
+        'You have a new message!',
+        formattedMessage,
+        [
+          NotificationType.EMAIL,
+          NotificationType.PUSH,
+          NotificationType.IN_APP,
+        ],
+        NotificationActions.NEW_MESSAGE,
+      );
+    }
 
     return message;
   }

@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { SavedListingsService } from './saved-listings.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
+import { ActiveUserGuard } from '../authentication/guards/active-user.guard';
 
 @Controller('saved-listings')
 export class SavedListingsController {
@@ -20,7 +21,7 @@ export class SavedListingsController {
 
   // Get all saved rooms for a user
   @Get('rooms')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async findUserSavedRooms(@Req() req: any) {
     try {
       const savedRooms = await this.savedListingsService.findUserSavedRooms(
@@ -40,7 +41,7 @@ export class SavedListingsController {
 
   // Add a room to the user's saved rooms
   @Post('rooms')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async addUserSavedRoom(@Req() req: any, @Body('roomId') roomId: string) {
     try {
       const savedRooms = await this.savedListingsService.addUserSavedRooms(
@@ -58,7 +59,7 @@ export class SavedListingsController {
 
   // Delete a room from the user's saved rooms
   @Delete('rooms/:roomId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async deleteUserSavedRoom(@Req() req: any, @Param('roomId') roomId: string) {
     try {
       const deletedRoom = await this.savedListingsService.deleteUserSavedRooms(
@@ -78,7 +79,7 @@ export class SavedListingsController {
   }
 
   @Post('roommates')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async addUserSavedRoommate(
     @Req() req: any,
     @Body('roommateId') roommateId: string,
@@ -101,7 +102,7 @@ export class SavedListingsController {
 
   // Delete a roommate from the user's saved roommates
   @Delete('roommates/:roommateId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async deleteUserSavedRoommate(
     @Req() req: any,
     @Param('roommateId') roommateId: string,
@@ -126,12 +127,11 @@ export class SavedListingsController {
   }
 
   @Get('roommates')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async findUserSavedRoommates(@Req() req: any) {
     try {
-      const savedRoommates = await this.savedListingsService.findUserSavedRoommates(
-        req.user.userId,
-      );
+      const savedRoommates =
+        await this.savedListingsService.findUserSavedRoommates(req.user.userId);
       if (!savedRoommates) {
         throw new NotFoundException('No saved roommates found');
       }

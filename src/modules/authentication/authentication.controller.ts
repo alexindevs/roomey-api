@@ -21,6 +21,7 @@ import {
 import { Response } from 'express';
 import { statusCodes } from 'src/shared/constants';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Types } from 'mongoose';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -150,5 +151,33 @@ export class AuthenticationController {
         data: response.data,
       });
     }
+  }
+
+  @Post('deactivate')
+  @UseGuards(JwtAuthGuard) // Assuming only authenticated users can deactivate
+  @HttpCode(200)
+  async deactivateUser(@Req() req: any, @Res() res: Response) {
+    const userObjectId = new Types.ObjectId(req.user.userId); // Convert to MongoDB ObjectId
+    const response = await this.authService.deactivateUser(userObjectId);
+
+    if ('error' in response) {
+      return res.status(response.code).json({ message: response.error });
+    }
+
+    return res.status(response.code).json({ message: response.message });
+  }
+
+  @Post('reactivate')
+  @UseGuards(JwtAuthGuard) // Assuming only authenticated users can reactivate
+  @HttpCode(200)
+  async reactivateUser(@Req() req: any, @Res() res: Response) {
+    const userObjectId = new Types.ObjectId(req.user.userId); // Convert to MongoDB ObjectId
+    const response = await this.authService.reactivateUser(userObjectId);
+
+    if ('error' in response) {
+      return res.status(response.code).json({ message: response.error });
+    }
+
+    return res.status(response.code).json({ message: response.message });
   }
 }

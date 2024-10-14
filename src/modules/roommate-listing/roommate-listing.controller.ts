@@ -21,6 +21,7 @@ import {
 } from './roommate-listing.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CloudinaryConfig } from '../file-uploads/cloudinary.config';
+import { ActiveUserGuard } from '../authentication/guards/active-user.guard';
 
 @Controller('roommate-listings')
 export class RoommateListingController {
@@ -30,7 +31,7 @@ export class RoommateListingController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async createRoommateListing(
     @Body() createRoommateListingDto: CreateRoommateListingDto,
     @Req() req: any,
@@ -49,7 +50,7 @@ export class RoommateListingController {
   }
 
   @Post(':listingId/upload-images')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 8 }]))
   async uploadRoommateListingImages(
     @UploadedFiles() files: { images?: Express.Multer.File[] },
@@ -75,14 +76,14 @@ export class RoommateListingController {
   }
 
   @Get('homepage')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async fetchHomepageRoommateListings(@Req() req: any) {
     const userId = req.user.userId;
     return this.roommateListingService.fetchHomepageRoommateListings(userId);
   }
 
   @Get('my-listings')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async findByUserIdAndStatus(
     @Req() req: any,
     @Query('isActive') isActive: string,
@@ -100,7 +101,7 @@ export class RoommateListingController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async update(
     @Param('id') id: string,
     @Body() updateRoommateListingDto: UpdateRoommateListingDto,
@@ -117,7 +118,7 @@ export class RoommateListingController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveUserGuard)
   async remove(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.userId;
     const listing = await this.roommateListingService.findOne(id);
