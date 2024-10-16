@@ -34,7 +34,6 @@ export class DirectMessagingService {
     });
 
     if (existingConversation) {
-      console.log('Existing conversation found:', existingConversation);
       return existingConversation;
     }
 
@@ -75,13 +74,12 @@ export class DirectMessagingService {
     page: number = 1,
     limit: number = 20,
   ): Promise<ConversationDocument[]> {
-    const skip = (page - 1) * limit; // Calculate how many documents to skip
-
+    const skip = (page - 1) * limit;
     return this.conversationModel
       .aggregate([
         {
           $match: {
-            user_ids: new Types.ObjectId(userId), // Match conversations involving the user
+            users: new Types.ObjectId(userId), // Match conversations involving the user
           },
         },
         {
@@ -119,9 +117,9 @@ export class DirectMessagingService {
           // Project the required fields (you can add/remove fields as needed)
           $project: {
             _id: 1,
-            user_ids: 1,
-            room_listing_id: 1,
-            roommate_listing_id: 1,
+            users: 1,
+            room_listing: 1,
+            roommate_listing: 1,
             listing_type: 1,
             created_at: 1,
             updated_at: 1,

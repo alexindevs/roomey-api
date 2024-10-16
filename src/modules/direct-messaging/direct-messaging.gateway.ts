@@ -8,7 +8,6 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { DirectMessagingService } from './direct-messaging.service';
 import { ConnectionService } from '../connections/connections.service';
 import { ListingType } from './direct-messaging.schema';
@@ -17,7 +16,6 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UseWsGuards } from 'src/shared/decorators/use-ws-guard';
 import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
 
 @WebSocketGateway({
@@ -29,7 +27,6 @@ import { AccessTokenService } from '../authentication/tokens/accesstoken.service
   },
   namespace: 'direct-messaging',
 })
-@UseWsGuards(JwtAuthGuard)
 export class DirectMessagingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -153,16 +150,16 @@ export class DirectMessagingGateway
       data.conversationId,
     );
 
-    conversation.users.forEach(async (participantId) => {
-      if (participantId.toString() !== userId) {
-        this.server.to(participantId.toString()).emit('newMessage', message);
+    conversation.users.forEach(async (participant) => {
+      if (participant._id.toString() !== userId) {
+        this.server.to(participant._id.toString()).emit('newMessage', message);
 
         const unreadCount =
           await this.directMessagingService.getUnreadMessageCount(
-            participantId.toString(),
+            participant._id.toString(),
           );
         this.server
-          .to(participantId.toString())
+          .to(participant._id.toString())
           .emit('unreadMessageCount', unreadCount);
       }
     });
@@ -180,7 +177,6 @@ export class DirectMessagingGateway
       data.conversationId,
       data.before,
     );
-    console.log(messages);
 
     client.emit('getMessagesResponse', messages);
   }

@@ -76,7 +76,7 @@
         function connectToWebSocket() {
             const token = document.getElementById('token').value;
 
-            socket = io('http://localhost:3000/direct-messaging', {
+            socket = io('https://tgbsldrj-3000.uks1.devtunnels.ms/direct-messaging', {
                 auth: {
                     token: token
                 }
@@ -122,7 +122,7 @@
             const listingId = document.getElementById('listingId').value;
 
             socket.emit('createConversation', {
-                userIds: [userId, '670fbaf758cfd6a751e911f1'], // example userId to create conversation with
+                userIds: [userId, '66e34873662945c5adfa7b86'], // example userId to create conversation with
                 listingType: listingType,
                 listingId: listingId
             });
