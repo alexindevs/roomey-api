@@ -30,23 +30,24 @@ export class DirectMessagingService {
     listingId?: string,
   ): Promise<ConversationDocument> {
     const existingConversation = await this.conversationModel.findOne({
-      user_ids: { $all: userIds.map((id) => new Types.ObjectId(id)) },
+      users: { $all: userIds.map((id) => new Types.ObjectId(id)) },
     });
 
     if (existingConversation) {
+      console.log('Existing conversation found:', existingConversation);
       return existingConversation;
     }
 
     const conversation = new this.conversationModel({
-      user_ids: userIds.map((id) => new Types.ObjectId(id)),
+      users: userIds.map((id) => new Types.ObjectId(id)),
       listing_type: listingType,
     });
 
     if (listingId) {
       if (listingType === ListingType.Room) {
-        conversation.room_listing_id = new Types.ObjectId(listingId);
+        conversation.room_listing = new Types.ObjectId(listingId);
       } else {
-        conversation.roommate_listing_id = new Types.ObjectId(listingId);
+        conversation.roommate_listing = new Types.ObjectId(listingId);
       }
     }
 
@@ -56,7 +57,17 @@ export class DirectMessagingService {
   async getConversation(
     conversationId: string,
   ): Promise<ConversationDocument | null> {
-    return this.conversationModel.findById(conversationId);
+    return this.conversationModel
+      .findById(conversationId)
+      .populate('users', '-password') // Populate users array, excluding sensitive data like password
+      .populate({
+        path: 'room_listing',
+        model: 'RoomListing',
+      })
+      .populate({
+        path: 'roommate_listing',
+        model: 'RoommateListing',
+      });
   }
 
   async getUserConversations(
@@ -78,7 +89,7 @@ export class DirectMessagingService {
           $lookup: {
             from: 'messages', // Name of the message collection
             localField: '_id', // Field in the conversation collection
-            foreignField: 'conversation_id', // Field in the message collection
+            foreignField: 'conversation', // Field in the message collection
             as: 'messages', // Output array of messages
           },
         },
@@ -127,8 +138,8 @@ export class DirectMessagingService {
     content: string,
   ): Promise<MessageDocument> {
     const message = new this.messageModel({
-      conversation_id: new Types.ObjectId(conversationId),
-      sender_id: new Types.ObjectId(senderId),
+      conversation: new Types.ObjectId(conversationId),
+      sender: new Types.ObjectId(senderId),
       content,
     });
 
@@ -143,7 +154,7 @@ export class DirectMessagingService {
       { new: true },
     );
 
-    const receiver_id = conversation.user_ids.find(
+    const receiver_id = conversation.users.find(
       (id) => id.toString() !== senderId,
     );
 
@@ -182,7 +193,7 @@ export class DirectMessagingService {
     return this.messageModel
       .find(query)
       .sort({ sent_at: -1 })
-      .populate('sender_id');
+      .populate('sender');
   }
 
   async markMessagesAsRead(
@@ -191,8 +202,8 @@ export class DirectMessagingService {
   ): Promise<void> {
     await this.messageModel.updateMany(
       {
-        conversation_id: new Types.ObjectId(conversationId),
-        sender_id: { $ne: new Types.ObjectId(userId) },
+        conversation: new Types.ObjectId(conversationId),
+        sender: { $ne: new Types.ObjectId(userId) },
         is_read: false,
       },
       { is_read: true },
@@ -204,8 +215,8 @@ export class DirectMessagingService {
     const conversationIds = conversations.map((conv) => conv._id);
 
     return this.messageModel.countDocuments({
-      conversation_id: { $in: conversationIds },
-      sender_id: { $ne: new Types.ObjectId(userId) },
+      conversation: { $in: conversationIds },
+      sender: { $ne: new Types.ObjectId(userId) },
       is_read: false,
     });
   }

@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { xssMiddleware } from './core/middlewares/xss.middleware';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +27,7 @@ async function bootstrap() {
   );
 
   app.enableCors({ origin: '*' });
+  app.useWebSocketAdapter(new IoAdapter(app));
   app.use(xssMiddleware);
 
   await app.listen(process.env.PORT || 3000);

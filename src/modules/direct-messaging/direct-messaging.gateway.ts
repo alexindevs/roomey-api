@@ -8,51 +8,80 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { JwtAuthGuard } from '../authentication/guards//jwt-auth.guard'; // Import your guard
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { DirectMessagingService } from './direct-messaging.service';
 import { ConnectionService } from '../connections/connections.service';
 import { ListingType } from './direct-messaging.schema';
 import {
   ForbiddenException,
+  Logger,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
+import { UseWsGuards } from 'src/shared/decorators/use-ws-guard';
+import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
 
-@WebSocketGateway({ cors: true, namespace: 'direct-messaging' })
-@UseGuards(JwtAuthGuard)
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type'],
+  },
+  namespace: 'direct-messaging',
+})
+@UseWsGuards(JwtAuthGuard)
 export class DirectMessagingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer() server: Server;
+  private readonly logger = new Logger(DirectMessagingGateway.name);
 
   constructor(
     private readonly directMessagingService: DirectMessagingService,
     private readonly connectionService: ConnectionService,
+    private readonly accessTokenService: AccessTokenService,
   ) {}
 
   async handleConnection(@ConnectedSocket() client: Socket) {
-    const userId = client['user'].userId;
+    try {
+      const token =
+        client.handshake.auth.token || (client.handshake.query.token as string);
 
-    if (userId) {
+      if (!token) {
+        this.logger.warn(`No token provided for client: ${client.id}`);
+        throw new UnauthorizedException('Missing authentication token');
+      }
+
+      const { isValid, payload } =
+        this.accessTokenService.verifyAccessToken(token);
+
+      if (!isValid || !payload.userId) {
+        this.logger.warn(`Invalid token for client: ${client.id}`);
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      const userId = payload.userId;
+
       await this.connectionService.addConnection(
         userId,
         client.id,
         'messaging',
       );
-      console.log(`Client connected: ${client.id}, User: ${userId}`);
 
-      // Join a room for the user's ID to allow direct messaging
       client.join(userId);
 
-      // Send unread message count to the user
       const unreadCount =
         await this.directMessagingService.getUnreadMessageCount(userId);
       client.emit('unreadMessageCount', unreadCount);
+    } catch (error) {
+      this.logger.error(`Connection error: ${error.message}`, error.stack);
+      client.emit('error', 'Authentication failed');
+      client.disconnect();
     }
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.id}`);
     await this.connectionService.removeConnection(client.id, 'messaging');
   }
 
@@ -66,7 +95,16 @@ export class DirectMessagingGateway
       listingId?: string;
     },
   ) {
-    const clientId = client['user'].userId;
+    const token =
+      client.handshake.auth.token || (client.handshake.query.token as string);
+    const { isValid, payload } =
+      this.accessTokenService.verifyAccessToken(token);
+
+    if (!isValid || !payload.userId) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const clientId = payload.userId;
     if (!clientId || !data.userIds.includes(clientId)) {
       throw new UnauthorizedException(
         'You cannot create a conversation between other people',
@@ -83,7 +121,6 @@ export class DirectMessagingGateway
       data.listingId,
     );
 
-    // Notify all participants about the new conversation
     data.userIds.forEach((userId) => {
       this.server.to(userId).emit('newConversation', conversation);
     });
@@ -96,7 +133,16 @@ export class DirectMessagingGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { conversationId: string; content: string },
   ) {
-    const userId = client.handshake.query.userId as string;
+    const token =
+      client.handshake.auth.token || (client.handshake.query.token as string);
+    const { isValid, payload } =
+      this.accessTokenService.verifyAccessToken(token);
+
+    if (!isValid || !payload.userId) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const userId = payload.userId;
     const message = await this.directMessagingService.sendMessage(
       data.conversationId,
       userId,
@@ -107,12 +153,10 @@ export class DirectMessagingGateway
       data.conversationId,
     );
 
-    // Send the message to all participants in the conversation
-    conversation.user_ids.forEach(async (participantId) => {
+    conversation.users.forEach(async (participantId) => {
       if (participantId.toString() !== userId) {
         this.server.to(participantId.toString()).emit('newMessage', message);
 
-        // Update the other client's unread count
         const unreadCount =
           await this.directMessagingService.getUnreadMessageCount(
             participantId.toString(),
@@ -146,13 +190,21 @@ export class DirectMessagingGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { conversationId: string },
   ) {
-    const userId = client.handshake.query.userId as string;
+    const token =
+      client.handshake.auth.token || (client.handshake.query.token as string);
+    const { isValid, payload } =
+      this.accessTokenService.verifyAccessToken(token);
+
+    if (!isValid || !payload.userId) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const userId = payload.userId;
     await this.directMessagingService.markMessagesAsRead(
       data.conversationId,
       userId,
     );
 
-    // Notify the user about the updated unread count
     const unreadCount =
       await this.directMessagingService.getUnreadMessageCount(userId);
     client.emit('unreadMessageCount', unreadCount);
@@ -161,13 +213,19 @@ export class DirectMessagingGateway
   @SubscribeMessage('getUserConversations')
   async handleGetUserConversations(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { page?: number; limit?: number }, // Add pagination data from the client
+    @MessageBody() data: { page?: number; limit?: number },
   ) {
-    const userId = client.handshake.query.userId as string;
+    const token =
+      client.handshake.auth.token || (client.handshake.query.token as string);
+    const { isValid, payload } =
+      this.accessTokenService.verifyAccessToken(token);
 
-    // Destructure page and limit from the data sent by the client, with defaults
+    if (!isValid || !payload.userId) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const userId = payload.userId;
     const { page = 1, limit = 20 } = data;
-    // Use the new paginated method
     const conversations =
       await this.directMessagingService.getUserConversations(
         userId,
@@ -175,7 +233,6 @@ export class DirectMessagingGateway
         limit,
       );
 
-    // Emit the paginated conversations to the client
     client.emit('getUserConversationsResponse', conversations);
   }
 }

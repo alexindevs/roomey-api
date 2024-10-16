@@ -11,13 +11,13 @@ export enum ListingType {
 @Schema()
 export class Conversation {
   @Prop({ type: [Types.ObjectId], ref: 'User', required: true }) // user_ids of participants
-  user_ids: Types.ObjectId[];
+  users: Types.ObjectId[];
 
   @Prop({ type: Types.ObjectId, ref: 'RoomListing' }) // Optional: Room listing
-  room_listing_id?: Types.ObjectId;
+  room_listing?: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'RoommateListing' }) // Optional: Roommate listing
-  roommate_listing_id?: Types.ObjectId;
+  roommate_listing?: Types.ObjectId;
 
   @Prop({ enum: ListingType, type: String, required: true }) // Specifies whether it's a room or roommate listing
   listing_type: ListingType;
@@ -36,10 +36,10 @@ export type MessageDocument = HydratedDocument<Message>;
 @Schema()
 export class Message {
   @Prop({ type: Types.ObjectId, ref: 'Conversation', required: true })
-  conversation_id: Types.ObjectId;
+  conversation: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // sender of the message
-  sender_id: Types.ObjectId;
+  sender: Types.ObjectId;
 
   @Prop({ type: String, required: true }) // message content
   content: string;

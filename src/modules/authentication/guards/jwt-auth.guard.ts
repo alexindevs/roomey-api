@@ -13,17 +13,23 @@ import { WsException } from '@nestjs/websockets';
 export class JwtAuthGuard implements CanActivate {
   constructor(private readonly accessTokenService: AccessTokenService) {}
 
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
-    if (context.getType() === 'http') {
-      const request = context.switchToHttp().getRequest<Request>();
-      return this.validateHttpRequest(request);
-    } else if (context.getType() === 'ws') {
-      const client = context.switchToWs().getClient<Socket>();
-      return this.validateWsRequest(client);
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    try {
+      if (context.getType() === 'http') {
+        const request = context.switchToHttp().getRequest<Request>();
+        return this.validateHttpRequest(request);
+      } else if (context.getType() === 'ws') {
+        const client = context.switchToWs().getClient<Socket>();
+        console.log('Client connected:', client.id);
+        return this.validateWsRequest(client);
+      }
+      return false; // Default for unknown context
+    } catch (error) {
+      if (context.getType() === 'ws') {
+        throw new WsException(error.message);
+      }
+      throw error; // For HTTP, we can throw the original error
     }
-    return false; // Default for unknown context
   }
 
   private async validateHttpRequest(request: Request): Promise<boolean> {
@@ -35,30 +41,40 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const token = authHeader.split(' ')[1];
-    const { isValid, payload } = this.accessTokenService.verifyAccessToken(token);
-
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    request['user'] = payload; // Attach the payload to the request object
-    return true;
+    return this.validateToken(token, (payload) => {
+      request['user'] = payload;
+    });
   }
 
   private async validateWsRequest(client: Socket): Promise<boolean> {
     const token = client.handshake.query.token as string;
+    console.log('Token:', token);
 
     if (!token) {
       throw new WsException('Missing authentication token');
     }
 
-    const { isValid, payload } = this.accessTokenService.verifyAccessToken(token);
+    return this.validateToken(token, (payload) => {
+      client['user'] = payload;
+    });
+  }
 
-    if (!isValid) {
-      throw new WsException('Invalid token');
+  private async validateToken(
+    token: string,
+    attachPayload: (payload: any) => void,
+  ): Promise<boolean> {
+    if (!this.accessTokenService) {
+      throw new Error('AccessTokenService is undefined');
     }
-
-    client['user'] = payload; // Attach the payload to the client object
+    
+    const { isValid, payload } = await this.accessTokenService.verifyAccessToken(token);
+  
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  
+    attachPayload(payload);
     return true;
   }
+  
 }

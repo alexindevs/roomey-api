@@ -59,6 +59,12 @@ export class ActiveUserGuard implements CanActivate {
           : new UnauthorizedException('User not found');
       }
 
+      if (!user.verified) {
+        throw isWs
+          ? new WsException('User not verified')
+          : new UnauthorizedException('User not verified');
+      }
+
       if (user.account_deactivated) {
         throw isWs
           ? new WsException('Account is deactivated')

@@ -12,9 +12,11 @@ import {
   Query,
   UseInterceptors,
   UploadedFiles,
+  Res,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { RoommateListingService } from './roommate-listing.service';
+import { Response } from 'express';
 import {
   CreateRoommateListingDto,
   UpdateRoommateListingDto,
@@ -56,7 +58,11 @@ export class RoommateListingController {
     @UploadedFiles() files: { images?: Express.Multer.File[] },
     @Param('listingId') listingId: string,
     @Req() req: any,
+    @Res() res: Response,
   ) {
+    if (!files || !files.images || files.images.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
     const userId = req.user.userId;
     const uploadedImages = await Promise.all(
       files.images.map((file) =>

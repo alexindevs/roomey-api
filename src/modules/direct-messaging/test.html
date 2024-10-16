@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Messaging Test</title>
+</head>
+<body>
+    <h1>Direct Messaging Test</h1>
+    
+    <div>
+        <label for="token">Token:</label>
+        <input type="text" id="token">
+    </div>
+    <div>
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId">
+    </div>
+    <div>
+        <label for="listingType">Listing Type (room/roommate):</label>
+        <input type="text" id="listingType">
+    </div>
+    <div>
+        <label for="listingId">Listing ID:</label>
+        <input type="text" id="listingId">
+    </div>
+
+    <div>
+        <label for="conversationId">Conversation ID:</label>
+        <input type="text" id="conversationId">
+    </div>
+    
+    <button id="connectBtn">Connect</button>
+    <br><br>
+
+    <div>
+        <button id="createConversationBtn">Create Conversation</button>
+    </div>
+
+    <div>
+        <h3>Fetch Previous Conversations</h3>
+        <label for="page">Page:</label>
+        <input type="number" id="page" min="1" value="1">
+        
+        <label for="limit">Limit:</label>
+        <input type="number" id="limit" min="1" value="10">
+        <button id="fetchConversationsBtn">Fetch Conversations</button>
+    </div>
+
+    <div>
+        <h3>Unread Messages: <span id="unreadCount">0</span></h3>
+    </div>
+
+    <div>
+        <label for="message">Message:</label>
+        <input type="text" id="message">
+        <button id="sendBtn">Send Message</button>
+    </div>
+
+    <div>
+        <h3>Messages:</h3>
+        <ul id="messages"></ul>
+    </div>
+
+    <div>
+        <h3>Conversations:</h3>
+        <ul id="conversations"></ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        let socket;
+        let selectedConversationId = null; // Optional global for default conversation
+
+        // Function to connect to WebSocket
+        function connectToWebSocket() {
+            const token = document.getElementById('token').value;
+
+            socket = io('http://localhost:3000/direct-messaging', {
+                auth: {
+                    token: token
+                }
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to WebSocket server');
+
+                // Fetch unread messages count on connection
+                socket.on('unreadMessageCount', (count) => {
+                    document.getElementById('unreadCount').textContent = count;
+                });
+
+                // Handle receiving messages
+                socket.on('newMessage', (message) => {
+                    console.log('New message received:', message);
+                    displayMessage(message);
+                });
+
+                // Handle sending message response
+                socket.on('sendMessageResponse', (message) => {
+                    displayMessage(message);
+                });
+
+                // Handle fetching message history response
+                socket.on('getMessagesResponse', (messages) => {
+                    messages.forEach((msg) => displayMessage(msg));
+                });
+
+                // Handle fetching conversations
+                socket.on('getUserConversationsResponse', (conversations) => {
+                    conversations.forEach((conv) => {
+                        displayConversation(conv);
+                    });
+                });
+            });
+        }
+
+        // Function to create a conversation
+        function createConversation() {
+            const userId = document.getElementById('userId').value;
+            const listingType = document.getElementById('listingType').value;
+            const listingId = document.getElementById('listingId').value;
+
+            socket.emit('createConversation', {
+                userIds: [userId, '670fbaf758cfd6a751e911f1'], // example userId to create conversation with
+                listingType: listingType,
+                listingId: listingId
+            });
+
+            socket.on('newConversation', (conversation) => {
+                console.log('New conversation created:', conversation);
+                selectedConversationId = conversation._id; // Store the conversation ID
+                displayConversation(conversation);
+            });
+        }
+
+        // Function to fetch user conversations
+        function fetchConversations() {
+            const page = document.getElementById('page').value;
+            const limit = document.getElementById('limit').value;
+            console.log(page, limit);
+            socket.emit('getUserConversations', { page: Number(page), limit: Number(limit) });
+
+            socket.on('getUserConversationsResponse', (conversations) => {
+                console.log('User conversations fetched:', conversations);
+                conversations.forEach((conv) => {
+                    displayConversation(conv);
+                });
+            });
+        }
+
+        // Send message handler
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const message = document.getElementById('message').value;
+            const conversationId = document.getElementById('conversationId').value;
+            
+            if (!conversationId) {
+                alert('No conversation ID entered. Please enter a valid conversation ID.');
+                return;
+            }
+
+            socket.emit('sendMessage', { conversationId: conversationId, content: message });
+            document.getElementById('message').value = '';
+        });
+
+        // Display conversation in the UI
+        function displayConversation(conversation) {
+            const conversationList = document.getElementById('conversations');
+            const li = document.createElement('li');
+            li.textContent = `Conversation: ${conversation._id}`;
+            conversationList.appendChild(li);
+        }
+
+        // Display message in the UI
+        function displayMessage(message) {
+            const messageList = document.getElementById('messages');
+            const li = document.createElement('li');
+            li.textContent = `From ${message.sender._id}: ${message.content}`;
+            messageList.appendChild(li);
+        }
+
+        // Event listeners
+        document.getElementById('connectBtn').addEventListener('click', connectToWebSocket);
+        document.getElementById('createConversationBtn').addEventListener('click', createConversation);
+        document.getElementById('fetchConversationsBtn').addEventListener('click', fetchConversations);
+    </script>
+</body>
+</html>
