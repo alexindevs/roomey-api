@@ -79,20 +79,18 @@ export class DirectMessagingService {
       .aggregate([
         {
           $match: {
-            users: new Types.ObjectId(userId), // Match conversations involving the user
+            users: new Types.ObjectId(userId),
           },
         },
         {
-          // Lookup the latest message in the conversation
           $lookup: {
-            from: 'messages', // Name of the message collection
-            localField: '_id', // Field in the conversation collection
-            foreignField: 'conversation', // Field in the message collection
-            as: 'messages', // Output array of messages
+            from: 'messages',
+            localField: '_id',
+            foreignField: 'conversation',
+            as: 'messages',
           },
         },
         {
-          // Sort the messages in each conversation by sent_at descending to get the latest message
           $addFields: {
             latestMessage: {
               $arrayElemAt: [
@@ -103,27 +101,73 @@ export class DirectMessagingService {
           },
         },
         {
-          // Sort conversations by the latest message's sent_at field
           $sort: { 'latestMessage.sent_at': -1 },
         },
         {
-          // Skip and limit for pagination
           $skip: skip,
         },
         {
           $limit: limit,
         },
         {
-          // Project the required fields (you can add/remove fields as needed)
+          $lookup: {
+            from: 'users',
+            localField: 'users',
+            foreignField: '_id',
+            as: 'users',
+          },
+        },
+        {
+          $lookup: {
+            from: 'roomlistings', // Assuming the collection name is 'room_listings'
+            localField: 'room_listing',
+            foreignField: '_id',
+            as: 'room_listing_data',
+          },
+        },
+        {
+          $lookup: {
+            from: 'roommatelistings', // Assuming the collection name is 'roommate_listings'
+            localField: 'roommate_listing',
+            foreignField: '_id',
+            as: 'roommate_listing_data',
+          },
+        },
+        {
+          $addFields: {
+            listing_data: {
+              $switch: {
+                branches: [
+                  {
+                    case: { $eq: ['$listing_type', 'Room'] }, // If listing type is 'room'
+                    then: { $arrayElemAt: ['$room_listing_data', 0] },
+                  },
+                  {
+                    case: { $eq: ['$listing_type', 'Roommate'] }, // If listing type is 'roommate'
+                    then: { $arrayElemAt: ['$roommate_listing_data', 0] },
+                  },
+                ],
+                default: null, // Default to null if no match
+              },
+            },
+          },
+        },
+        {
           $project: {
             _id: 1,
-            users: 1,
-            room_listing: 1,
-            roommate_listing: 1,
+            users: {
+              _id: 1,
+              first_name: 1,
+              last_name: 1,
+              profile_picture: 1,
+              email: 1,
+              gender: 1,
+            },
+            listing_data: 1, // This field will now contain the populated room or roommate listing
             listing_type: 1,
             created_at: 1,
             updated_at: 1,
-            latestMessage: 1, // Include the latest message in the output
+            latestMessage: 1,
           },
         },
       ])
@@ -177,6 +221,9 @@ export class DirectMessagingService {
       );
     }
 
+    // Populate the sender field before sending it back
+    await message.populate('sender', '-password');
+
     return message;
   }
 
@@ -184,7 +231,7 @@ export class DirectMessagingService {
     conversationId: string,
     before?: Date,
   ): Promise<MessageDocument[]> {
-    const query: any = { conversation_id: new Types.ObjectId(conversationId) };
+    const query: any = { conversation: new Types.ObjectId(conversationId) };
     if (before) {
       query.sent_at = { $lt: before };
     }

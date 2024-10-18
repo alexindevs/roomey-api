@@ -3,186 +3,435 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Messaging Test</title>
+    <title>WebSocket Messaging Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .conversation-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .conversation-item:hover {
+            background-color: #f5f5f5;
+        }
+        .conversation-item.active {
+            background-color: #e3f2fd;
+        }
+        .messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .message.sent {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+        .message.received {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+        .connection-status {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .connection-status.connected {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .connection-status.disconnected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .unread {
+            background-color: #ff4444;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <h1>Direct Messaging Test</h1>
+    <h1>Direct Messaging Test Interface</h1>
     
-    <div>
-        <label for="token">Token:</label>
-        <input type="text" id="token">
-    </div>
-    <div>
-        <label for="userId">User ID:</label>
-        <input type="text" id="userId">
-    </div>
-    <div>
-        <label for="listingType">Listing Type (room/roommate):</label>
-        <input type="text" id="listingType">
-    </div>
-    <div>
-        <label for="listingId">Listing ID:</label>
-        <input type="text" id="listingId">
+    <div class="connection-status disconnected" id="connectionStatus">
+        Disconnected
     </div>
 
-    <div>
-        <label for="conversationId">Conversation ID:</label>
-        <input type="text" id="conversationId">
-    </div>
-    
-    <button id="connectBtn">Connect</button>
-    <br><br>
+    <div class="container">
+        <div class="left-panel">
+            <!-- Connection Panel -->
+            <div class="panel">
+                <h3>Connection</h3>
+                <div class="form-group">
+                    <label for="token">Access Token:</label>
+                    <input type="text" id="token" placeholder="Enter your access token">
+                    <label for="userId">User ID:</label>
+                    <input type="text" id="userId" placeholder="Enter your user ID">
+                </div>
+                <button id="connectBtn">Connect</button>
+                <button id="disconnectBtn" style="display: none;">Disconnect</button>
+            </div>
 
-    <div>
-        <button id="createConversationBtn">Create Conversation</button>
-    </div>
+            <!-- Create Conversation Panel -->
+            <div class="panel">
+                <h3>Create New Conversation</h3>
+                <div class="form-group">
+                    <label for="recipientId">Recipient User ID:</label>
+                    <input type="text" id="recipientId" placeholder="Enter recipient's user ID">
+                </div>
+                <div class="form-group">
+                    <label for="listingType">Listing Type:</label>
+                    <select id="listingType">
+                        <option value="Room">Room</option>
+                        <option value="Roommate">Roommate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="listingId">Listing ID (optional):</label>
+                    <input type="text" id="listingId" placeholder="Enter listing ID">
+                </div>
+                <button id="createConversationBtn">Create Conversation</button>
+            </div>
 
-    <div>
-        <h3>Fetch Previous Conversations</h3>
-        <label for="page">Page:</label>
-        <input type="number" id="page" min="1" value="1">
-        
-        <label for="limit">Limit:</label>
-        <input type="number" id="limit" min="1" value="10">
-        <button id="fetchConversationsBtn">Fetch Conversations</button>
-    </div>
+            <!-- Conversations List -->
+            <div class="panel">
+                <h3>Conversations</h3>
+                <div class="form-group">
+                    <label for="page">Page:</label>
+                    <input type="number" id="page" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="limit">Items per page:</label>
+                    <input type="number" id="limit" value="10" min="1">
+                </div>
+                <button id="fetchConversationsBtn">Refresh Conversations</button>
+                <div id="conversationsList"></div>
+            </div>
+        </div>
 
-    <div>
-        <h3>Unread Messages: <span id="unreadCount">0</span></h3>
-    </div>
-
-    <div>
-        <label for="message">Message:</label>
-        <input type="text" id="message">
-        <button id="sendBtn">Send Message</button>
-    </div>
-
-    <div>
-        <h3>Messages:</h3>
-        <ul id="messages"></ul>
-    </div>
-
-    <div>
-        <h3>Conversations:</h3>
-        <ul id="conversations"></ul>
+        <div class="right-panel">
+            <!-- Messages Panel -->
+            <div class="panel">
+                <h3>Messages</h3>
+                <div id="selectedConversationInfo"></div>
+                <div class="messages" id="messagesContainer"></div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <input type="text" id="messageInput" placeholder="Type your message...">
+                    <button id="sendMessageBtn" style="margin-top: 10px;">Send Message</button>
+                    <button id="markAsReadBtn" style="margin-top: 10px;">Mark as Read</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
         let socket;
-        let selectedConversationId = null; // Optional global for default conversation
+        let currentUserId = null;
+        let selectedConversationId = null;
 
-        // Function to connect to WebSocket
-        function connectToWebSocket() {
+        // Connection management
+        document.getElementById('connectBtn').addEventListener('click', connect);
+        document.getElementById('disconnectBtn').addEventListener('click', disconnect);
+
+        function connect() {
             const token = document.getElementById('token').value;
-
-            socket = io('https://tgbsldrj-3000.uks1.devtunnels.ms/direct-messaging', {
-                auth: {
-                    token: token
-                }
-            });
-
-            socket.on('connect', () => {
-                console.log('Connected to WebSocket server');
-
-                // Fetch unread messages count on connection
-                socket.on('unreadMessageCount', (count) => {
-                    document.getElementById('unreadCount').textContent = count;
-                });
-
-                // Handle receiving messages
-                socket.on('newMessage', (message) => {
-                    console.log('New message received:', message);
-                    displayMessage(message);
-                });
-
-                // Handle sending message response
-                socket.on('sendMessageResponse', (message) => {
-                    displayMessage(message);
-                });
-
-                // Handle fetching message history response
-                socket.on('getMessagesResponse', (messages) => {
-                    messages.forEach((msg) => displayMessage(msg));
-                });
-
-                // Handle fetching conversations
-                socket.on('getUserConversationsResponse', (conversations) => {
-                    conversations.forEach((conv) => {
-                        displayConversation(conv);
-                    });
-                });
-            });
-        }
-
-        // Function to create a conversation
-        function createConversation() {
             const userId = document.getElementById('userId').value;
-            const listingType = document.getElementById('listingType').value;
-            const listingId = document.getElementById('listingId').value;
-
-            socket.emit('createConversation', {
-                userIds: [userId, '66e34873662945c5adfa7b86'], // example userId to create conversation with
-                listingType: listingType,
-                listingId: listingId
-            });
-
-            socket.on('newConversation', (conversation) => {
-                console.log('New conversation created:', conversation);
-                selectedConversationId = conversation._id; // Store the conversation ID
-                displayConversation(conversation);
-            });
-        }
-
-        // Function to fetch user conversations
-        function fetchConversations() {
-            const page = document.getElementById('page').value;
-            const limit = document.getElementById('limit').value;
-            console.log(page, limit);
-            socket.emit('getUserConversations', { page: Number(page), limit: Number(limit) });
-
-            socket.on('getUserConversationsResponse', (conversations) => {
-                console.log('User conversations fetched:', conversations);
-                conversations.forEach((conv) => {
-                    displayConversation(conv);
-                });
-            });
-        }
-
-        // Send message handler
-        document.getElementById('sendBtn').addEventListener('click', () => {
-            const message = document.getElementById('message').value;
-            const conversationId = document.getElementById('conversationId').value;
             
-            if (!conversationId) {
-                alert('No conversation ID entered. Please enter a valid conversation ID.');
+            if (!token) {
+                alert('Please enter an access token');
+                return;
+            }
+            
+            if (!userId) {
+                alert('Please enter your user ID');
                 return;
             }
 
-            socket.emit('sendMessage', { conversationId: conversationId, content: message });
-            document.getElementById('message').value = '';
+            currentUserId = userId;
+            
+            socket = io('http://localhost:3000/direct-messaging', {
+                auth: { token }
+            });
+
+            setupSocketListeners();
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                updateConnectionStatus(false);
+                document.getElementById('connectBtn').style.display = 'block';
+                document.getElementById('disconnectBtn').style.display = 'none';
+            }
+        }
+
+        function setupSocketListeners() {
+            socket.on('connect', () => {
+                updateConnectionStatus(true);
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('disconnectBtn').style.display = 'block';
+            });
+
+            socket.on('disconnect', () => {
+                updateConnectionStatus(false);
+                document.getElementById('connectBtn').style.display = 'block';
+                document.getElementById('disconnectBtn').style.display = 'none';
+            });
+
+            socket.on('error', (error) => {
+                console.error('Socket error:', error);
+                alert(`Socket error: ${error}`);
+            });
+
+            socket.on('unreadMessageCount', (count) => {
+                updateUnreadCount(count);
+            });
+
+            socket.on('newMessage', (message) => {
+                console.log('New message:', message);
+                console.log ('Selected conversation:', selectedConversationId, message.conversation == selectedConversationId);
+                if (message.conversation == selectedConversationId) {
+                    appendMessage(message);
+                }
+                refreshConversations();
+            });
+
+            socket.on('newConversation', (conversation) => {
+                refreshConversations();
+            });
+
+            socket.on('sendMessageResponse', (message) => {
+                console.log('Message sent successfully:', message);
+                if (message.conversation === selectedConversationId) {
+                    appendMessage(message);
+                }
+                // Also refresh the conversations list to update latest message
+                refreshConversations();
+            });
+
+            socket.on('getUserConversationsResponse', (conversations) => {
+                displayConversations(conversations);
+            });
+
+            socket.on('getMessagesResponse', (messages) => {
+                displayMessages(messages);
+            });
+        }
+
+        // Conversation management
+        document.getElementById('createConversationBtn').addEventListener('click', () => {
+            const recipientId = document.getElementById('recipientId').value;
+            const listingType = document.getElementById('listingType').value;
+            const listingId = document.getElementById('listingId').value;
+
+            if (!recipientId) {
+                alert('Please enter a recipient ID');
+                return;
+            }
+
+            socket.emit('createConversation', {
+                userIds: [currentUserId, recipientId],
+                listingType,
+                listingId: listingId || undefined
+            });
         });
 
-        // Display conversation in the UI
-        function displayConversation(conversation) {
-            const conversationList = document.getElementById('conversations');
-            const li = document.createElement('li');
-            li.textContent = `Conversation: ${conversation._id}`;
-            conversationList.appendChild(li);
+        document.getElementById('fetchConversationsBtn').addEventListener('click', refreshConversations);
+
+        function refreshConversations() {
+            const page = parseInt(document.getElementById('page').value);
+            const limit = parseInt(document.getElementById('limit').value);
+            socket.emit('getUserConversations', { page, limit });
         }
 
-        // Display message in the UI
-        function displayMessage(message) {
-            const messageList = document.getElementById('messages');
-            const li = document.createElement('li');
-            li.textContent = `From ${message.sender._id}: ${message.content}`;
-            messageList.appendChild(li);
+        function displayConversations(conversations) {
+            console.log('Conversations:', conversations);
+            const container = document.getElementById('conversationsList');
+            container.innerHTML = '';
+
+            conversations.forEach(conv => {
+                const div = document.createElement('div');
+                div.className = 'conversation-item';
+                if (conv._id === selectedConversationId) {
+                    div.classList.add('active');
+                }
+
+                const latestMessage = conv.latestMessage ? 
+                    `<br>Latest: ${conv.latestMessage.content.substring(0, 30)}...` : 
+                    '<br>No messages yet';
+
+                div.innerHTML = `
+                    <strong>${conv.listing_data.information.description}</strong>
+                    <br>Type: ${conv.listing_type}
+                    ${latestMessage}
+                `;
+
+                div.addEventListener('click', () => selectConversation(conv._id));
+                container.appendChild(div);
+            });
         }
 
-        // Event listeners
-        document.getElementById('connectBtn').addEventListener('click', connectToWebSocket);
-        document.getElementById('createConversationBtn').addEventListener('click', createConversation);
-        document.getElementById('fetchConversationsBtn').addEventListener('click', fetchConversations);
+        // Message management
+        document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+        document.getElementById('markAsReadBtn').addEventListener('click', markMessagesAsRead);
+
+        function sendMessage() {
+            if (!selectedConversationId) {
+                alert('Please select a conversation first');
+                return;
+            }
+
+            const content = document.getElementById('messageInput').value;
+            if (!content) {
+                alert('Please enter a message');
+                return;
+            }
+
+            socket.emit('sendMessage', {
+                conversationId: selectedConversationId,
+                content
+            });
+
+            document.getElementById('messageInput').value = '';
+        }
+
+        /**
+         * Handles a conversation selection event.
+         * Updates the selected conversation ID and refreshes the messages list.
+         * @param {string} conversationId - The ID of the conversation to select
+         */
+        function selectConversation(conversationId) {
+            selectedConversationId = conversationId;
+            document.getElementById('selectedConversationInfo').textContent = 
+                `Selected Conversation: ${conversationId}`;
+            
+            // Clear existing messages
+            document.getElementById('messagesContainer').innerHTML = '';
+            
+            // Fetch messages for this conversation
+            socket.emit('getMessages', { conversationId });
+            
+            // Update UI to show active conversation
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.querySelector('strong').textContent.includes(conversationId)) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function markMessagesAsRead() {
+            if (selectedConversationId) {
+                socket.emit('markMessagesAsRead', { conversationId: selectedConversationId });
+            }
+        }
+
+        function displayMessages(messages) {
+            console.log(messages, 'I get called as displayMessages');
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+
+            // Sort messages by sent_at in ascending order
+            messages.sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
+
+            messages.forEach(message => {
+                appendMessage(message);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendMessage(message) {
+            console.log(message, 'I get called as appendMessage');
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = `message ${message.sender._id == currentUserId || message.sender == currentUserId ? 'sent' : 'received'}`;
+            div.innerHTML = `
+                <strong>${message.sender._id == currentUserId || message.sender == currentUserId ? 'You' : message.sender.first_name}</strong>
+                <br>${message.content}
+                <br><small>${new Date(message.sent_at).toLocaleString()}</small>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Utility functions
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
+            statusDiv.textContent = connected ? 'Connected' : 'Disconnected';
+        }
+
+        function updateUnreadCount(count) {
+            const badge = document.createElement('span');
+            badge.className = 'status-badge unread';
+            badge.textContent = `${count} unread`;
+            
+            const statusDiv = document.getElementById('connectionStatus');
+            const existingBadge = statusDiv.querySelector('.status-badge');
+            if (existingBadge) {
+                statusDiv.removeChild(existingBadge);
+            }
+            if (count > 0) {
+                statusDiv.appendChild(badge);
+            }
+        }
     </script>
 </body>
 </html>

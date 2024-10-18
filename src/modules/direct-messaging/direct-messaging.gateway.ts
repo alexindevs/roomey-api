@@ -102,6 +102,11 @@ export class DirectMessagingGateway
     }
 
     const clientId = payload.userId;
+
+    if (!data.userIds[0] || !data.userIds[1]) {
+      throw new ForbiddenException('Please select two users.');
+    }
+
     if (!clientId || !data.userIds.includes(clientId)) {
       throw new UnauthorizedException(
         'You cannot create a conversation between other people',
@@ -177,6 +182,7 @@ export class DirectMessagingGateway
       data.conversationId,
       data.before,
     );
+    console.log(messages);
 
     client.emit('getMessagesResponse', messages);
   }

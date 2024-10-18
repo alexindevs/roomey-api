@@ -10,12 +10,26 @@ export class ConnectionService {
     private connectionModel: Model<ConnectionDocument>,
   ) {}
 
-  // Add a new connection when the user connects
   async addConnection(
     userId: string,
     socketId: string,
     namespace: string,
   ): Promise<Connection> {
+    await this.connectionModel.updateMany(
+      { namespace: namespace, user_id: userId },
+      { is_active: false },
+    );
+
+    const existingConnection = await this.connectionModel.findOne({
+      user_id: userId,
+      socket_id: socketId,
+      namespace: namespace,
+    });
+
+    if (existingConnection) {
+      return existingConnection;
+    }
+
     const connection = new this.connectionModel({
       user_id: userId,
       socket_id: socketId,
