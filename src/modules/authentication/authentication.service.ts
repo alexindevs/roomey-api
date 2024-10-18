@@ -202,6 +202,7 @@ export class AuthenticationService {
       'You have been verified successfully! You can now create listings on the platform. Welcome to Roomey!',
       [NotificationType.EMAIL, NotificationType.PUSH, NotificationType.IN_APP],
       NotificationActions.PROFILE_VERIFIED,
+      verified,
     );
 
     return {
@@ -287,6 +288,7 @@ export class AuthenticationService {
       'Your account has been deactivated successfully. You can no longer perform actions on the platform. To reactivate your account, please sign in.',
       [NotificationType.EMAIL, NotificationType.PUSH, NotificationType.IN_APP],
       NotificationActions.ACCOUNT_DEACTIVATED,
+      user,
     );
 
     return {

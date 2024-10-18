@@ -30,6 +30,7 @@ export class NotificationsService {
     description: string,
     type: NotificationType[],
     purpose: NotificationActions,
+    metadata: object,
   ) {
     try {
       // Create notification in database
@@ -40,6 +41,7 @@ export class NotificationsService {
         type,
         purpose,
         isRead: false,
+        metadata,
       });
       await notification.save();
 
@@ -62,6 +64,7 @@ export class NotificationsService {
             user.push_token,
             title,
             description,
+            metadata,
           );
           console.log(`Push notification sent to ${userId}`);
         }
@@ -95,9 +98,16 @@ export class NotificationsService {
     description: string,
     type: NotificationType[],
     purpose: NotificationActions,
+    metadata: object,
   ) {
     const notifications = [];
     for (const userId of userIds) {
+      // find the user
+      const user = await this.userModel.findOne({ _id: userId });
+      if (!user) {
+        console.error(`User not found for notification: ${userId}`);
+        continue;
+      }
       const notification = new this.notificationModel({
         userId,
         title,
@@ -105,6 +115,7 @@ export class NotificationsService {
         type,
         purpose,
         isRead: false,
+        metadata,
       });
       await notification.save();
       notifications.push(notification);
@@ -115,9 +126,10 @@ export class NotificationsService {
       }
       if (type.includes(NotificationType.PUSH)) {
         await this.pushNotificationService.sendPushNotification(
-          userId,
+          user.push_token,
           title,
           description,
+          metadata,
         );
       }
       if (type.includes(NotificationType.IN_APP)) {

@@ -50,6 +50,9 @@ export class Notification {
   @Prop({ required: true, type: Boolean, default: false })
   isRead: boolean; // Whether the user has read the notification
 
+  @Prop({ required: true, type: Object })
+  metadata: object;
+
   @Prop({ required: true, type: Date, default: Date.now })
   createdAt: Date;
 

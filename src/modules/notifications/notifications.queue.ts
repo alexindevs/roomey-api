@@ -16,6 +16,7 @@ export class NotificationsQueue {
     description: string,
     type: NotificationType[],
     purpose: NotificationActions,
+    metadata: object,
   ) {
     try {
       await this.notificationsQueue.add('send_notification', {
@@ -24,6 +25,7 @@ export class NotificationsQueue {
         description,
         type,
         purpose,
+        metadata,
       });
       console.log('Notification Job Added');
     } catch (error) {
@@ -35,6 +37,7 @@ export class NotificationsQueue {
     users: { userId: string; title: string; description: string }[],
     type: NotificationType,
     purpose: NotificationActions,
+    metadata: object,
   ) {
     const bulkJobs = users.map((user) => ({
       name: 'send_notification',
@@ -44,6 +47,7 @@ export class NotificationsQueue {
         description: user.description,
         type,
         purpose,
+        metadata,
       },
     }));
 

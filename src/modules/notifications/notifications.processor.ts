@@ -16,17 +16,19 @@ export class NotificationsProcessor {
       description: string;
       type: [NotificationType];
       purpose: NotificationActions;
+      metadata: object;
     }>,
   ) {
     console.log('Notification job being processed. Job data:', job.data);
     try {
-      const { userId, title, description, type, purpose } = job.data;
+      const { userId, title, description, type, purpose, metadata } = job.data;
       await this.notificationService.sendAppNotification(
         userId,
         title,
         description,
         type,
         purpose,
+        metadata,
       );
     } catch (error) {
       console.error('Error processing notification job:', error);
@@ -39,15 +41,17 @@ export class NotificationsProcessor {
       users: { userId: string; title: string; description: string }[];
       type: NotificationType;
       purpose: NotificationActions;
+      metadata: object;
     }>,
   ) {
-    const { users, type, purpose } = job.data;
+    const { users, type, purpose, metadata } = job.data;
     await this.notificationService.sendBulkNotifications(
       users.map((user) => user.userId),
       users[0].title,
       users[0].description,
       [type],
       purpose,
+      metadata,
     );
   }
 }

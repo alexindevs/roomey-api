@@ -173,6 +173,7 @@ export class DirectMessagingService {
           NotificationType.IN_APP,
         ],
         NotificationActions.NEW_MESSAGE,
+        message,
       );
     }
 

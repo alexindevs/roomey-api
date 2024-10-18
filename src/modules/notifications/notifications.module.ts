@@ -12,6 +12,7 @@ import { ConnectionSchema } from '../connections/connections.schema';
 import { NotificationsQueue } from './notifications.queue'; // Ensure NotificationsQueue is imported
 import { AccessTokenService } from '../authentication/tokens/accesstoken.service';
 import { UserSchema } from '../authentication/authentication.schema';
+import { NotificationController } from './notifications.controller';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserSchema } from '../authentication/authentication.schema';
     NotificationGatewayService,
     ConnectionService,
   ],
+  controllers: [NotificationController],
   exports: [
     NotificationsService,
     NotificationsQueue, // Export NotificationsQueue

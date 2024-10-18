@@ -66,15 +66,15 @@ export class JwtAuthGuard implements CanActivate {
     if (!this.accessTokenService) {
       throw new Error('AccessTokenService is undefined');
     }
-    
-    const { isValid, payload } = await this.accessTokenService.verifyAccessToken(token);
-  
+
+    const { isValid, payload } =
+      await this.accessTokenService.verifyAccessToken(token);
+
     if (!isValid) {
       throw new UnauthorizedException('Invalid token');
     }
-  
+
     attachPayload(payload);
     return true;
   }
-  
 }
