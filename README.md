@@ -1,73 +1,61 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Roomey
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Roomey is an all-in-one platform designed to simplify the process of finding compatible roommates and rental listings. By leveraging personalized algorithms and a robust verification system, Roomey ensures a secure and user-friendly experience. The platform caters to diverse audiences, including students, young professionals, and immigrants, with features tailored to enhance the shared living experience.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### 1. **Room Listings**
+   - **Search by Location:** Users can search for rooms based on city, address, or proximity using geolocation.
+   - **Filter Options:** Filter by:
+     - Price range
+     - Number of bedrooms and bathrooms
+     - Amenities (e.g., Wifi, Parking, Heating)
+   - **Listing Details:** Display essential details like rent, move-in date, and room description.
+   - **Priority Listings:** Paid options for highlighted listings.
 
-## Installation
+### 2. **Roommate Matching**
+   - **Profile Search:** Find potential roommates based on:
+     - Lifestyle preferences (e.g., smoking, pets)
+     - Interests and hobbies
+     - Budget compatibility
+   - **Detailed Profiles:** Users can view detailed profiles and initiate connections.
 
-```bash
-$ npm install
-```
+### 3. **Saved Items**
+   - **Saved Rooms:** Bookmark interesting room listings.
+   - **Saved Roommates:** Keep track of potential roommate profiles.
 
-## Running the app
+### 4. **User Management**
+   - Secure account creation using email or social media login (Google/Facebook).
+   - Two-factor authentication (optional).
+   - Account deletion and data anonymization options.
 
-```bash
-# development
-$ npm run start
+### 5. **Enhanced Search Experience**
+   - **Text-Based Search:** Search listings using keywords (e.g., "apartment with balcony").
+   - **Geolocation Search:** View nearby listings within a specified radius.
+   - **Filter by Move-in Date:** Narrow options by availability timeline.
 
-# watch mode
-$ npm run start:dev
+### 6. **Special Immigrant Features**
+   - **Pre-Arrival Verification:** For immigrants, Roomey offers verified room listings to ensure secure options before relocating.
+   - **Localized Recommendations:** Curated listings and roommate matches based on the user's origin and destination preferences.
 
-# production mode
-$ npm run start:prod
-```
+---
 
-## Test
+## Technical Overview
 
-```bash
-# unit tests
-$ npm run test
+### **Backend**
+- Built with **NestJS** for robust and scalable API development.
+- Database management using **MongoDB** with Mongoose for schema definitions.
+- Roommate and room listings are managed via RESTful endpoints.
 
-# e2e tests
-$ npm run test:e2e
+### **Key Functionalities**
+- **Search Algorithms:** Advanced text and geospatial search capabilities using MongoDB’s query features.
+- **Data Validation:** Ensures data integrity for listings, user profiles, and search queries.
+- **Scalability:** Supports thousands of concurrent listings and search queries efficiently.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Support
+## Project Vision
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+Roomey aims to revolutionize the roommate and rental experience by addressing common pain points like safety, compatibility, and affordability. With its focus on immigrants and young professionals, the platform is positioned to expand globally, starting with Canada and moving into larger markets like the U.S. and Europe.
