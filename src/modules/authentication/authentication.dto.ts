@@ -1,22 +1,56 @@
-import { IsString, IsEmail, IsNotEmpty, IsDate, Length } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsDateString,
+  Length,
+  IsPhoneNumber,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
+import { Roles, Gender, NotificationFrequency } from './authentication.schema'; // Import enums
 
 export class NewUserDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  first_name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  last_name: string;
 
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
-  date_of_birth: Date;
+  date_of_birth: string;
 
   @IsString()
   @IsNotEmpty()
   @Length(8, 24)
   password: string;
+
+  @IsPhoneNumber()
+  @IsNotEmpty()
+  phone_number: string;
+
+  @IsEnum(Gender)
+  @IsNotEmpty()
+  gender: Gender;
+
+  @IsOptional()
+  @IsString()
+  profile_picture?: string;
+
+  @IsEnum(Roles)
+  @IsOptional() // Default is 'User', so this can be optional in the DTO
+  role?: Roles;
+
+  @IsOptional()
+  @IsEnum(NotificationFrequency)
+  notification_frequency?: NotificationFrequency;
 }
 
 export class VerifyUserDto {

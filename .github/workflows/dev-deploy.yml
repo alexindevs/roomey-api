@@ -2,11 +2,10 @@ name: Deploy Roomey Project
 on:
   push:
     branches:
-      - main
+      - dev
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -23,7 +22,7 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Copy deployment script
-      run: scp -o StrictHostKeyChecking=no ./.github/scripts/deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/deploy.sh
+      run: scp -o StrictHostKeyChecking=no ./.github/scripts/dev-deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/dev-deploy.sh
     - name: Deploy to server
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -31,6 +30,6 @@ jobs:
         SERVER_IP: ${{ secrets.SERVER_IP }}
       run: |
         ssh -vvv -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          chmod +x /home/${{ secrets.SERVER_USER }}/deploy.sh
-          /home/${{ secrets.SERVER_USER }}/deploy.sh
+          chmod +x /home/${{ secrets.SERVER_USER }}/dev-deploy.sh
+          /home/${{ secrets.SERVER_USER }}/dev-deploy.sh
         EOF

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification WebSocket and REST API Test</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Notification WebSocket and REST API Test</h1>
+  
+  <div>
+    <label for="token">Access Token:</label>
+    <input type="text" id="token" placeholder="Enter token">
+    <button onclick="connectSocket()">Connect WebSocket</button>
+    <button onclick="getNotifications()">Get Notifications (REST API)</button>
+    <button onclick="markAsRead()">Mark as Read</button>
+  </div>
+
+  <div>
+    <h3>Notifications:</h3>
+    <ul id="notificationsList"></ul>
+  </div>
+
+  <script>
+    let socket;
+    let notifications = [];
+
+    // Connect to WebSocket server
+    function connectSocket() {
+      const token = document.getElementById('token').value;
+
+      if (!token) {
+        alert('Please provide a token');
+        return;
+      }
+
+      socket = io('http://localhost:3000/notifications', {
+        auth: {
+          token: token
+        }
+      });
+
+      // Handle WebSocket connection
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+      });
+
+      // Handle WebSocket errors
+      socket.on('error', (errorMessage) => {
+        alert('Error: ' + errorMessage);
+      });
+
+      // Handle real-time notification
+      socket.on('notification', (data) => {
+        displayNotification(data.payload);
+      });
+    }
+
+    // Fetch notifications using REST API
+    async function getNotifications() {
+      const token = document.getElementById('token').value;
+
+      if (!token) {
+        alert('Please provide a token');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/notifications', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        displayNotifications(data);
+      } catch (error) {
+        alert(`Error fetching notifications: ${error.message}`);
+      }
+    }
+
+    // Mark notifications as read using REST API
+    async function markAsRead() {
+      const token = document.getElementById('token').value;
+
+      if (!token) {
+        alert('Please provide a token');
+        return;
+      }
+
+      if (notifications.length === 0) {
+        alert('No notifications to mark as read.');
+        return;
+      }
+
+      const notificationIds = notifications.map(n => n._id);
+
+      try {
+        const response = await fetch('http://localhost:3000/notifications/read', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ notificationIds })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to mark notifications as read: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert(`Notifications marked as read: ${data.notificationIds.join(', ')}`);
+          notifications = notifications.filter(n => !data.notificationIds.includes(n.id));
+          updateNotificationsList();
+        }
+      } catch (error) {
+        alert(`Error marking notifications as read: ${error.message}`);
+      }
+    }
+
+    // Display real-time WebSocket notification
+    function displayNotification(notification) {
+      notifications.push(notification);
+      updateNotificationsList();
+    }
+
+    // Display notifications fetched via REST API
+    function displayNotifications(fetchedNotifications) {
+      notifications = fetchedNotifications;
+      updateNotificationsList();
+    }
+
+    // Update the notifications list in the UI
+    function updateNotificationsList() {
+      const notificationsList = document.getElementById('notificationsList');
+      notificationsList.innerHTML = '';
+
+      notifications.forEach(notification => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${notification.title}: ${notification.description} (${new Date(notification.createdAt).toLocaleString()})`;
+        listItem.setAttribute('data-id', notification.id);
+        notificationsList.appendChild(listItem);
+      });
+    }
+  </script>
+</body>
+</html>
