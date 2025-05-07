@@ -11,7 +11,7 @@ Roomey is an all-in-one platform designed to simplify the process of finding com
    - **Filter Options:** Filter by:
      - Price range
      - Number of bedrooms and bathrooms
-     - Amenities (e.g., Wifi, Parking, Heating)
+     - Amenities (e.g Wifi, Parking, Heating)
    - **Listing Details:** Display essential details like rent, move-in date, and room description.
    - **Priority Listings:** Paid options for highlighted listings.
 
